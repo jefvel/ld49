@@ -103,10 +103,6 @@ class Game extends hxd.App {
 			return;
 		}
 
-		if (conf.initialState != null) {
-			states.setState(conf.initialState);
-            initialState = null;
-        }
 		if (conf.onInit != null) {
 			conf.onInit();
 		}
@@ -122,6 +118,11 @@ class Game extends hxd.App {
 		if (conf.backgroundColor != null) {
 			engine.backgroundColor = conf.backgroundColor;
 		}
+
+		if (conf.initialState != null) {
+			states.setState(conf.initialState);
+            initialState = null;
+        }
 
 		conf = null;
     }
