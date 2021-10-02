@@ -1,5 +1,6 @@
 package gamestates;
 
+import h2d.col.Point;
 import entities.God;
 import h2d.Bitmap;
 import entities.Rope;
@@ -139,11 +140,25 @@ class PlayState extends elke.gamestate.GameState {
 			rope.horseX = horse.x;
 			rope.horseY = horse.y;
 
+			var d = new Point(game.s2d.mouseX, game.s2d.mouseY);
+			d.x -= game.s2d.width * 0.5;
+			d.y -= game.s2d.height * 0.5;
+
+			var ml = 50;
+			if (d.lengthSq() > ml * ml) {
+				d.normalize();
+				d.scale(ml);
+			}
+
+			if (!horse.jumping) {
+				d.scale(0);
+			}
+
 			var ty = horse.jumping ? 0.5 : 0.7;
 			targetOffY += (ty - targetOffY) * 0.4;
 
-			wy += ((game.s2d.height * ty - (horse.y - 64)) - wy) * 0.5;
-			wx += ((game.s2d.width * 0.5 - horse.x) - wx) * 0.3;
+			wx += ((game.s2d.width * 0.5 - horse.x) - wx - d.x) * 0.3;
+			wy += ((game.s2d.height * ty - (horse.y - 64) - d.y) - wy) * 0.5;
 		} else {
 			rope.horseFellOff = true;
 		}

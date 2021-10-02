@@ -1,5 +1,6 @@
 package entities;
 
+import h2d.col.Point;
 import elke.graphics.Sprite;
 import h2d.Bitmap;
 import elke.Game;
@@ -115,7 +116,7 @@ class Horse extends Entity2D {
 		rotSpeed += rotAcc;
 	}
 
-	var maxJumpSpeed = 20.0;
+	var maxJumpSpeed = 22.0;
 	var gravity = 0.4;
 	var jumpPower = 0.;
 	var ay = 0.;
@@ -128,7 +129,10 @@ class Horse extends Entity2D {
 		
 		crouching = true;
 		jumpPower = Math.sin(Math.PI * (x / Const.GAP_SIZE));
+		jumpPower = Math.max(0.4, jumpPower);
 		offsetY = Math.round(jumpPower * 30);
+		
+		Game.instance.sound.playWobble(hxd.Res.sound.crouch, 0.3, 0.05);
 	}
 
 	public function jump() {
@@ -142,17 +146,10 @@ class Horse extends Entity2D {
 		jumping = true;
 		crouching = false;
 
-		if (!hasGun && !hasSword) {
-			arm.animation.play("unarmed");
-		}
+		slashRatio = 1.;
 
-		if (hasGun) {
-			arm.animation.play("gun");
-		}
-
-		if (hasSword) {
-			arm.animation.play("sword");
-		}
+		Game.instance.sound.playWobble(hxd.Res.sound.jump, 0.3, 0.05);
+		updateArmAnim();
 	}
 
 	function onDied() {
@@ -170,21 +167,51 @@ class Horse extends Entity2D {
 	}
 
 	var armRotOffset = 0.;
+	var shootVelocity = 7;
+
+	var shootTime = 0.3;
+
 	function shoot() {
-		if (ammo <= 0) {
+		if (ammo <= 0 || shootTime > 0) {
 			return;
 		}
 
+		shootTime = 0.3;
 		ammo --;
 		armRotOffset = 0.9;
 
+		vy = Math.sin(pointDir) * shootVelocity * 1.2;
+		vx = Math.cos(pointDir) * shootVelocity;
+
+		Game.instance.sound.playWobble(hxd.Res.sound.gunshot, 0.4, 0.05);
+
+		arm.animation.play("shoot", false, true, 0, (s) -> {
+			updateArmAnim();
+		});
+
 		if (ammo <= 0) {
+			arm.animation.play("unarmed");
 			dropGun();
+		}
+	}
+
+	function updateArmAnim() {
+		if (!hasGun && !hasSword) {
+			arm.animation.play("unarmed");
+		}
+
+		if (hasGun) {
+			arm.animation.play("gun");
+		}
+
+		if (hasSword) {
+			arm.animation.play("sword");
 		}
 	}
 
 	var slashTime = 0.1;
 	var slashVelocity = 7;
+	var slashRatio = 1.;
 
 	function slash() {
 		if (slashTime > 0) {
@@ -192,9 +219,17 @@ class Horse extends Entity2D {
 		}
 
 		slashTime = 0.1;
+		var slashY = Math.sin(pointDir + Math.PI) * slashVelocity * slashRatio * 3; 
+		slashY = Math.min(0.1, slashY);
 
-		vy = Math.sin(pointDir + Math.PI) * slashVelocity; 
-		vx = Math.cos(pointDir + Math.PI) * slashVelocity;
+		var slashX = Math.cos(pointDir + Math.PI) * slashVelocity * slashRatio * 3;
+		slashX = Math.max(-3, slashX);
+		vy += slashY;
+		vx += slashX;
+
+		slashRatio *= 0.6;
+
+		Game.instance.sound.playWobble(hxd.Res.sound.slash, 0.3, 0.05);
 
 		arm.animation.play("slash", false, true, 0, (s) -> {
 			arm.animation.play("sword");
@@ -217,6 +252,8 @@ class Horse extends Entity2D {
 		var p = sword.localToGlobal();
 		s.x = p.x - parent.x;
 		s.y = p.y - parent.y;
+
+		Game.instance.sound.playWobble(hxd.Res.sound.drop, 0.3, 0.05);
 	}
 
 	function dropGun() {
@@ -230,6 +267,8 @@ class Horse extends Entity2D {
 		var p = gun.localToGlobal();
 		s.x = p.x - parent.x;
 		s.y = p.y - parent.y;
+
+		Game.instance.sound.playWobble(hxd.Res.sound.drop, 0.3, 0.05);
 	}
 
 	var vy = 0.;
@@ -242,6 +281,7 @@ class Horse extends Entity2D {
 		super.update(dt);
 
 		slashTime -= dt;
+		shootTime -= dt;
 
 		var s = getScene();
 		if (s != null) {
@@ -286,8 +326,19 @@ class Horse extends Entity2D {
 			if (jumping) {
 				sprite.animation.play("jumping");
 				sprite.rotation *= 0.6;
+
+				var maxVel = 20.;
+				var d = new Point(vx, vy);
+				if (d.lengthSq() > maxVel * maxVel) {
+					d.normalize();
+					d.scale(maxVel);
+					vx = d.x;
+					vy = d.y;
+				}
+
 				y += vy;
 				x += vx;
+
 				vx *= 0.9;
 				rotSpeed *= 0.7;
 				if (y < 0) {
@@ -298,6 +349,8 @@ class Horse extends Entity2D {
 					jumping = false;
 					sprite.animation.play("left");
 				}
+
+				x = Math.max(32, Math.min(Const.GAP_SIZE - 32, x));
 			} else {
 				rotSpeed = Math.min(Math.max(-maxRotSpeed, rotSpeed), maxRotSpeed);
 
