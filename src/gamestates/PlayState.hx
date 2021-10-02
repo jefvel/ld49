@@ -1,5 +1,6 @@
 package gamestates;
 
+import entities.Bullet;
 import h2d.col.Point;
 import entities.God;
 import h2d.Bitmap;
@@ -28,9 +29,14 @@ class PlayState extends elke.gamestate.GameState {
 
 	var god: God;
 
+	public var bullets: Array<Bullet>;
+
+	public static var instance: PlayState;
+
 	public function new() {}
 	override function onEnter() {
 		super.onEnter();
+		instance = this;
 		container = new Object(game.s2d);
 		world = new Object(container);
 
@@ -63,12 +69,15 @@ class PlayState extends elke.gamestate.GameState {
 		rRooftop = new Bitmap(rt, world);
 		rRooftop.y = -8;
 		rRooftop.x = Const.GAP_SIZE;
+
+		bullets = [];
 	}
 
 	var timeTilCrouch = 0.1;
 
 	var steppingLeft = false;
 	var steppingRight = false;
+
 	override function onEvent(e:Event) {
 		if (e.kind == EPush) {
 			if (horse.fellOff) {
@@ -143,8 +152,10 @@ class PlayState extends elke.gamestate.GameState {
 			var d = new Point(game.s2d.mouseX, game.s2d.mouseY);
 			d.x -= game.s2d.width * 0.5;
 			d.y -= game.s2d.height * 0.5;
+			
+			d.scale(0.6);
 
-			var ml = 50;
+			var ml = 80;
 			if (d.lengthSq() > ml * ml) {
 				d.normalize();
 				d.scale(ml);
@@ -163,6 +174,38 @@ class PlayState extends elke.gamestate.GameState {
 			rope.horseFellOff = true;
 		}
 
+		var steps = 2;
+		for (_ in 0...steps) {
+			for (b in bullets) {
+				b.moveBullet(dt);
+				if (b.willRemove || (b.bulletType == Sword && horse.swordCondition <= 0)) {
+					b.remove();
+					continue;
+				}
+
+				for (e in god.eyes) {
+					if (e.dead) {
+						continue;
+					}
+
+					var ex = e.x + god.x;
+					var ey = e.y + god.y;
+					var dx = ex - b.x;
+					var dy = ey - b.y;
+					var distSq = dx * dx + dy * dy;
+					var totalRadius = 25 + b.radius;
+					if (distSq < totalRadius * totalRadius) {
+						game.sound.playSfx(hxd.Res.sound.gunhit);
+						e.hurt(b.damage);
+						horse.onBulletHitEnemy(b, e);
+						b.willRemove = true;
+						if (!b.multiHit) {
+							b.remove();
+						}
+					}
+				}
+			}
+		}
 
 		world.x = Math.round(wx);
 		world.y = Math.round(wy);
