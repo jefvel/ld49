@@ -56,10 +56,11 @@ class God extends Entity2D {
 
 
 	public var eyes: Array<Eye>;
+	public var godEye: GodEye = null;
 
 	public var hands: Array<HandEnemy>;
 
-	var skeletonCount = 10;
+	public var skeletonCount = 10;
 	public var skeletons: Array<Skeleton>;
 
 	public function new(?p){
@@ -90,11 +91,19 @@ class God extends Entity2D {
 	var time = 0.;
 
 	var skRot = .0;
+	var yOff = 0.;
 	override function update(dt:Float) {
 		super.update(dt);
 		time += dt;
+		var yoffTarget =0.;
+		if (paused) {
+			yoffTarget = 200;
+		}
+
+		yOff += (yoffTarget - yOff) * 0.1;
+
 		x = Math.round(originX + Math.sin(time * 0.5) * 10);
-		y = Math.round(originY + Math.cos(time * 0.7) * 30);
+		y = Math.round(originY + Math.cos(time * 0.7) * 30 + yOff);
 
 		if (phase == Eyes) {
 			for (e in eyes) {
@@ -187,8 +196,12 @@ class God extends Entity2D {
 	function initHandsPhase() {
 		phase = Hands;
 		sprite.animation.play("hurt");
+		paused = true;
 		new Timeout(1.2, () -> {
 			sprite.animation.play("mean");
+			new Timeout(0.8, () -> {
+				paused = false;
+			});
 			new Timeout(1.2, () -> {
 				sprite.animation.play("idle");
 			});
@@ -205,16 +218,24 @@ class God extends Entity2D {
 			}
 		});
 	}
+	public var paused = false;
 
 
 	function initLastPhase() {
 		phase = CenterEye;
 		sprite.animation.play("hurt");
+		paused = true;
 		new Timeout(1.2, () -> {
 			sprite.animation.play("mean");
+			new Timeout(0.8, () -> {
+				paused = false;
+			});
+
 			new Timeout(1.2, () -> {
 				sprite.animation.play("idle");
 			});
+
+			godEye = new GodEye(this);
 
 			for (_ in 0...skeletonCount){
 				var s = new Skeleton(this);

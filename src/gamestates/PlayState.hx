@@ -1,5 +1,6 @@
 package gamestates;
 
+import h2d.ScaleGrid;
 import elke.Game;
 import entities.Bullet;
 import h2d.col.Point;
@@ -36,6 +37,9 @@ class PlayState extends elke.gamestate.GameState {
 
 	var timeElapsed = 0.;
 	var timeText : Text;
+
+	var bossBar : ScaleGrid;
+	var bossShieldBar : ScaleGrid;
 
 	public function new() {}
 	override function onEnter() {
@@ -86,7 +90,20 @@ class PlayState extends elke.gamestate.GameState {
 
 		timeText.x = 16;
 		timeText.y = 16;
+
+		bossBar = new ScaleGrid(hxd.Res.img.hpbar.toTile(), 3, 3, 3, 3, container);
+		bossBar.height = 9;
+		bossBar.width = 128;
+		
+		bossShieldBar = new ScaleGrid(hxd.Res.img.shieldbar.toTile(), 3, 3, 3, 3, container);
+		bossShieldBar.height = 5;
+		bossShieldBar.width = 128;
+
+		bossBar.visible = false;
+		bossShieldBar.visible = false;
 	}
+
+	var maxBarWidth = 128;
 
 	var timeTilCrouch = 0.1;
 
@@ -140,12 +157,41 @@ class PlayState extends elke.gamestate.GameState {
 		shakeY = (Math.random() * 2 - 1) * intensity;
 	}
 
+	public var wonGame = false;
+	public function winGame() {
+		bossBar.alpha = 0;
+		for (s in god.skeletons) {
+			s.hurt(1000);
+		}
+	}
+
 	override function update(dt:Float) {
 		super.update(dt);
 		time += dt;
 
-		if (!horse.fellOff) {
+		if (!horse.fellOff && !wonGame) {
 			timeElapsed += dt;
+		}
+
+		if (god.phase == CenterEye && god.godEye != null) {
+			bossBar.y = 8;
+			bossBar.x = Math.round((game.s2d.width - maxBarWidth) * 0.5);
+			bossBar.width = (god.godEye.health / god.godEye.maxHealth) * maxBarWidth;
+
+			var shields = 0.;
+			if (god.skeletons.length > 0) {
+				shields = god.skeletons.length / god.skeletonCount;
+			}
+
+			bossShieldBar.y = 8 + 12;
+			bossShieldBar.x = Math.round((game.s2d.width - maxBarWidth) * 0.5);
+			bossShieldBar.width = (shields) * maxBarWidth;
+			if (shields <= 0) {
+				bossShieldBar.alpha *= 0.7;
+			}
+
+			bossBar.visible = true;
+			bossShieldBar.visible = true;
 		}
 
 		var minutes = Math.floor(timeElapsed / 60);
@@ -294,6 +340,40 @@ class PlayState extends elke.gamestate.GameState {
 						e.hurt(b.damage);
 						if (e.dead) {
 							god.playHurt();
+						}
+						horse.onBulletHitEnemy(b, e);
+						b.willRemove = true;
+						if (!b.multiHit) {
+							b.remove();
+						}
+					}
+				}
+
+				if (god.godEye != null) {
+					var e = god.godEye;
+					if (e.dead) {
+						continue;
+					}
+
+					var ex = e.x + god.x;
+					var ey = e.y + god.y;
+					var dx = ex - b.x;
+					var dy = ey - b.y;
+					var distSq = dx * dx + dy * dy;
+					var totalRadius = 25 + b.radius;
+					if (distSq < totalRadius * totalRadius) {
+						game.sound.playSfx(hxd.Res.sound.gunhit);
+						game.freeze(2);
+
+						var shields = 0.;
+						if (god.skeletons.length > 0) {
+							shields = god.skeletons.length / god.skeletonCount;
+						}
+
+						e.hurt((1 - shields) * b.damage);
+
+						if (e.dead) {
+							winGame();
 						}
 						horse.onBulletHitEnemy(b, e);
 						b.willRemove = true;

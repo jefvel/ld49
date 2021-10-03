@@ -3,15 +3,19 @@ package entities;
 import elke.Game;
 import elke.graphics.Sprite;
 
-class Eye extends Enemy {
+class GodEye extends Enemy {
 	var sprite : Sprite;
-	public var health = 20.0;
+	public var health = 100.0;
+	public var maxHealth = 100.0;
 
 	public function new(?p) {
 		super(p);
-		sprite = hxd.Res.img.eye_tilesheet.toSprite2D(this);
-		sprite.originX = sprite.originY = 16;
+		sprite = hxd.Res.img.godeye_tilesheet.toSprite2D(this);
+		sprite.originX = sprite.originY = 32;
 		sprite.animation.play("idle", true, false, Math.random());
+		y = -28;
+		x = -2;
+		alpha = 0;
 	}
 	var htime = 0.0;
 
@@ -53,7 +57,13 @@ class Eye extends Enemy {
 			}
 		}
 
+		if (alpha < 1) {
+			alpha += 0.05;
+		}
+
+
 		if (dead) {
+			/*
 			x += vx;
 			y += vy;
 			vy += 0.5;
@@ -61,6 +71,7 @@ class Eye extends Enemy {
 			if (y > 500){
 				remove();
 			}
+			*/
 		}
 	}
 }
