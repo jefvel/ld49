@@ -168,6 +168,7 @@ class PlayState extends elke.gamestate.GameState {
 			alpha: 0.4,
 		};
 
+		tutorialImage = new Bitmap(hxd.Res.img.tutorial.toTile(), container);
 
 		positionIntroThing();
 
@@ -176,8 +177,9 @@ class PlayState extends elke.gamestate.GameState {
 
 	var taskStrIndex = 0;
 	var untilNextChar = 1.5;
-	var taskString = "Task #1\nKill God";
+	var taskString = "Task #1\nKill God. Don't die";
 	var taskText: Text;
+	var tutorialImage: Bitmap;
 
 	function startMusic() {
 		phase1Music = game.sound.playSfx(hxd.Res.sound.phase1music, 0.5, true);
@@ -208,10 +210,18 @@ class PlayState extends elke.gamestate.GameState {
 			introContainer.y = Math.round(introFrame.borderWidth + 32.0);
 			introContainer.x = 32;
 		}
+
+		var s = game.s2d;
+
 		if (taskText != null) {
 			taskText.x = 32;
-			var s = game.s2d;
 			taskText.y = Math.round(s.height - introFrame.borderWidth - 30.0 - 13 * 2);
+		}
+
+		if (tutorialImage != null) {
+			var t = tutorialImage.tile;
+			tutorialImage.x = Math.round(s.width - t.width);
+			tutorialImage.y = Math.round(s.height - introFrame.borderWidth - t.height);
 		}
 	}
 
@@ -244,8 +254,10 @@ class PlayState extends elke.gamestate.GameState {
 		new Timeout(0.2, () -> {
 			introContainer.remove();
 			taskText.remove();
+			tutorialImage.remove();
 			taskText = null;
 			introContainer = null;
+			tutorialImage = null;
 		});
 
 		god.visible = true;
@@ -403,7 +415,7 @@ class PlayState extends elke.gamestate.GameState {
 					if (newStr.charAt(newStr.length - 1) == '\n') {
 						untilNextChar = 0.8;
 					} else {
-						untilNextChar = 0.1;
+						untilNextChar = 0.08;
 					}
 				}
 			}
@@ -524,11 +536,13 @@ class PlayState extends elke.gamestate.GameState {
 			var ty = horse.jumping ? 0.5 : 0.7;
 			targetOffY += (ty - targetOffY) * 0.4;
 
-			wx += ((game.s2d.width * 0.5 - horse.x) - wx - d.x) * 0.3;
+			var wtgs = horse.landedFirstTime ? 1 : 0.0;
+
+			wx += ((game.s2d.width * 0.5 - horse.x) - wx - d.x * wtgs) * 0.3;
 			if (!horse.sitting) {
-				wy += ((game.s2d.height * ty - (horse.y - 64) - d.y) - wy) * 0.5;
+				wy += ((game.s2d.height * ty - (horse.y - 64) - d.y * wtgs) - wy) * 0.5;
 			} else {
-				wy += ((game.s2d.height * ty - (initialChoppY - 24) - d.y) - wy) * 0.5;
+				wy += ((game.s2d.height * ty - (initialChoppY - 24) - d.y * wtgs) - wy) * 0.5;
 			}
 		} else {
 			rope.horseFellOff = true;

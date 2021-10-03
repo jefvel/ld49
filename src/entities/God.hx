@@ -170,7 +170,8 @@ class God extends Entity2D {
 
 		exploded = true;
 		sprite.color.set(1000, 1000, 1000);
-		Game.instance.freeze(5);
+		Game.instance.sound.playSfx(hxd.Res.sound.goddieexplosion, 0.6);
+		Game.instance.freeze(10);
 		PlayState.instance.doShake();
 
 		PlayState.instance.onGodExplode();
@@ -203,7 +204,7 @@ class God extends Entity2D {
 			});
 		}
 
-		new Timeout(0.2, () -> {
+		new Timeout(0.1, () -> {
 			sprite.visible = false;
 		});
 	}
@@ -316,6 +317,7 @@ class God extends Entity2D {
 				untilExplode -= dt;
 				if (untilExplode < 0.5) {
 					rrrrat = 0;
+					stopRumble();
 				}
 				if (untilExplode < 0) {
 					explode();
@@ -415,7 +417,21 @@ class God extends Entity2D {
 
 		sprite.animation.play("dead");
 
+		rumbleChannel = Game.instance.sound.playSfx(hxd.Res.sound.goddierumble, 0.6);
+
 		dead = true;
+	}
+
+	public var rumbleChannel: hxd.snd.Channel;
+	public function stopRumble() {
+		if (rumbleChannel == null) {
+			return;
+		}
+
+		rumbleChannel.stop();
+		rumbleChannel = null;
+
+		Game.instance.sound.playSfx(hxd.Res.sound.explosionclick, 0.5);
 	}
 
 	var handsStarted = false;
