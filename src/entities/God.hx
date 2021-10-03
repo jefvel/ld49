@@ -274,9 +274,10 @@ class God extends Entity2D {
 		super.update(dt);
 		time += dt;
 		var yoffTarget = 0.;
+		var horse = PlayState.instance.horse;
 		if (paused) {
 			yoffTarget = 200;
-		} else if (!PlayState.instance.horse.dead) {
+		} else if (!horse.dead && !horse.sitting) {
 			attackTimer += dt;
 			if (attackTimer > timePerAttack) {
 				doAttack();
@@ -441,6 +442,8 @@ class God extends Entity2D {
 		removeAttacks();
 		timePerAttack = attackInterval2;
 
+		Game.instance.sound.playSfx(hxd.Res.sound.bossangry, 0.6);
+
 		sprite.animation.play("hurt");
 		paused = true;
 
@@ -484,6 +487,9 @@ class God extends Entity2D {
 		enabledAttacks.push(skyRails);
 
 		sprite.animation.play("hurt");
+
+		Game.instance.sound.playSfx(hxd.Res.sound.bossangry, 0.6);
+
 		paused = true;
 		new Timeout(1.2, () -> {
 			PlayState.instance.startPhase3Music();

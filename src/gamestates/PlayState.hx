@@ -1,5 +1,9 @@
 package gamestates;
 
+import elke.gamestate.GameState;
+import h3d.Engine;
+import entities.Frame;
+import elke.graphics.Sprite;
 import h2d.col.Bounds;
 import h2d.Tile;
 import hxd.Key;
@@ -24,6 +28,7 @@ class PlayState extends elke.gamestate.GameState {
 	public var world : Object;
 	public var attackContainer: Object;
 
+	public var chopper: Sprite;
 	public var horse: Horse;
 	var rope: Rope;
 
@@ -52,6 +57,13 @@ class PlayState extends elke.gamestate.GameState {
 	var phase3Music: hxd.snd.Channel;
 
 	public var startedGame = false;
+	var initialChoppY = -650;
+	var choppX = 0.0;
+	var choppY = 0.0;
+
+	var introFrame: Frame;
+
+	var introContainer: Object;
 
 	public function new() {}
 	override function onEnter() {
@@ -63,15 +75,31 @@ class PlayState extends elke.gamestate.GameState {
 		god = new God(world);
 		god.originX = Const.GAP_SIZE * 0.5;
 		god.originY = -390;
+		god.visible = false;
+
+		chopper = hxd.Res.img.chopper_tilesheet.toSprite2D(world);
+		chopper.originX = 363;
+		chopper.originY = 183;
+		chopper.animation.play();
 		
 		horse = new Horse(world);
-		horse.x = 0;
-		horse.y = 0;
+		horse.x = Const.GAP_SIZE * 0.5;
+		horse.y = initialChoppY;
+
+		choppX = horse.x;
+		choppY = horse.y;
+		chopper.x = horse.x;
+		chopper.y = horse.y;
 
 		rope = new Rope(world);
 
-		wy = (game.s2d.height * 0.7 - (horse.y - 64));
+		rope.visible = false;
+
 		wx = (game.s2d.width * 0.5 - horse.x);
+
+		wy = (game.s2d.height * 0.5 - (initialChoppY - 24));
+		world.x = Math.round(wx);
+		world.y = Math.round(wy);
 
 		swordCrate = new Bitmap(hxd.Res.img.swordcrate.toTile(), world);
 		swordCrate.x = 0 - 64 - 20; 
@@ -94,7 +122,6 @@ class PlayState extends elke.gamestate.GameState {
 
 		attackContainer = new Object(world);
 
-
 		timeText = new Text(hxd.Res.fonts.picory.toFont(), container);
 		timeText.dropShadow = {
 			dx: 1,
@@ -102,6 +129,8 @@ class PlayState extends elke.gamestate.GameState {
 			color: 0x312c3b,
 			alpha: 0.8,
 		}
+
+		timeText.visible = false;
 
 		timeText.x = 16;
 		timeText.y = 16;
@@ -117,14 +146,42 @@ class PlayState extends elke.gamestate.GameState {
 		bossBar.visible = false;
 		bossShieldBar.visible = false;
 
-		startMusic();
+		introMusic = game.sound.playSfx(hxd.Res.sound.chopper, 0.05, true);
+
+		introFrame = new Frame(container);
+
+		introContainer = new Object(container);
+		var titleText = new Text(hxd.Res.fonts.headline.toFont(), introContainer);
+		titleText.text = 'Horse with a Human Mask\nOn a Tightrope';
+		titleText.dropShadow = {
+			dx: 1,
+			dy: 1,
+			color: 0x1b111f,
+			alpha: 0.7,
+		};
+
+		taskText = new Text(hxd.Res.fonts.picory.toFont(), container);
+		taskText.dropShadow = {
+			dx: 1,
+			dy: 1,
+			color: 0x1b111f,
+			alpha: 0.4,
+		};
+
+
+		positionIntroThing();
+
+		//startMusic();
 	}
+
+	var taskStrIndex = 0;
+	var untilNextChar = 1.5;
+	var taskString = "Task #1\nKill God";
+	var taskText: Text;
 
 	function startMusic() {
 		phase1Music = game.sound.playSfx(hxd.Res.sound.phase1music, 0.5, true);
-
 		phase2Music = game.sound.playSfx(hxd.Res.sound.phase2music, 0., true);
-
 		phase3Music = game.sound.playSfx(hxd.Res.sound.phase3music, 0., true);
 	}
 
@@ -144,7 +201,25 @@ class PlayState extends elke.gamestate.GameState {
 		phase3Music.fadeTo(0.5, 0.2);
 	}
 
+	function positionIntroThing() {
+		if (introContainer != null) {
+			var b = introContainer.getBounds();
+			var s = game.s2d;
+			introContainer.y = Math.round(introFrame.borderWidth + 32.0);
+			introContainer.x = 32;
+		}
+		if (taskText != null) {
+			taskText.x = 32;
+			var s = game.s2d;
+			taskText.y = Math.round(s.height - introFrame.borderWidth - 30.0 - 13 * 2);
+		}
+	}
+
 	public function stopAllMusic() {
+		if (introMusic != null) {
+			introMusic.stop();
+		}
+
 		if (phase1Music != null) {
 			phase1Music.stop();
 			phase1Music = null;
@@ -165,12 +240,37 @@ class PlayState extends elke.gamestate.GameState {
 		if (startedGame) {
 			return;
 		}
+
+		new Timeout(0.2, () -> {
+			introContainer.remove();
+			taskText.remove();
+			taskText = null;
+			introContainer = null;
+		});
+
+		god.visible = true;
+		rope.visible = true;
+
+		startedGame = true;
+
 		if (introMusic != null) {
-			introMusic.stop();
+			introMusic.fadeTo(0, 0.3, () -> {
+				introMusic.stop();
+				introMusic = null;
+			});
 		}
 
-		
+		horse.jumpOffChopper();
+	}
 
+	var firstLand = true;
+	public function onHorseLanded() {
+		if (firstLand) {
+			startMusic();
+			introFrame.hide = true;
+		}
+
+		firstLand = false;
 	}
 
 	var maxBarWidth = 128;
@@ -201,13 +301,19 @@ class PlayState extends elke.gamestate.GameState {
 	var deathTimeout = 0.5;
 	override function onEvent(e:Event) {
 		if (e.kind == EPush) {
+
+			if (horse.sitting) {
+				startGame();
+				return;
+			}
+
 			if ((horse.fellOff || heroContainer != null) && deathTimeout < 0) {
 				reset();
 			}
 
 			if (e.button == 0) {
 				steppingLeft = true;
-				if (horse.jumping) {
+				if (horse.jumping && horse.landedFirstTime) {
 					horse.attack();
 				}
 			}
@@ -279,11 +385,53 @@ class PlayState extends elke.gamestate.GameState {
 		god.kill();
 	}
 
+
+	var choppVX = 0.;
+	var choppVY = 0.;
 	override function update(dt:Float) {
 		super.update(dt);
 		time += dt;
 
-		if (!horse.fellOff && !wonGame) {
+		if (!startedGame) {
+			if (taskStrIndex < taskString.length) {
+				untilNextChar -= dt;
+				if (untilNextChar <= 0) {
+					taskStrIndex ++;
+					taskStrIndex = Std.int(Math.min(taskStrIndex, taskString.length));
+					var newStr = taskString.substr(0, taskStrIndex);
+					taskText.text = newStr;
+					if (newStr.charAt(newStr.length - 1) == '\n') {
+						untilNextChar = 0.8;
+					} else {
+						untilNextChar = 0.1;
+					}
+				}
+			}
+
+			positionIntroThing();
+		}
+
+		if (horse.sitting) {
+			chopper.y = Math.round(choppY + Math.sin(time * 2.0) * 6);
+			horse.y = chopper.y;
+		} else if (chopper != null) {
+			chopper.rotation += (0.2 - chopper.rotation) * 0.2;
+			choppVX += 0.3;
+			choppVX = Math.min(choppVX, 5);
+
+			choppVY -= 0.2;
+			choppVY = Math.max(choppVY, -5);
+
+			chopper.x += choppVX;
+			chopper.y += choppVY;
+			if (chopper.x > Const.GAP_SIZE + 100) {
+				chopper.remove();
+				chopper = null;
+			}
+		}
+
+		if (!horse.fellOff && !wonGame && startedGame && horse.landedFirstTime) {
+			timeText.visible = true;
 			timeElapsed += dt;
 		}
 
@@ -328,27 +476,29 @@ class PlayState extends elke.gamestate.GameState {
 		timeText.text = '$extraZero$minutes:$extraSecondZero${Math.floor(seconds)}:$hundreds';
 
 		if (!horse.fellOff) {
-			if (steppingLeft && steppingRight) {
-				timeTilCrouch -= dt;
-				if (timeTilCrouch <= 0) {
-					horse.crouch();
-					timeTilCrouch = 0.1;
+			if (horse.landedFirstTime) {
+				if (steppingLeft && steppingRight) {
+					timeTilCrouch -= dt;
+					if (timeTilCrouch <= 0) {
+						horse.crouch();
+						timeTilCrouch = 0.1;
+					}
+				} else if (horse.crouching) {
+					if (!steppingLeft || !steppingRight) {
+						horse.jump();
+					}
 				}
-			} else if (horse.crouching) {
-				if (!steppingLeft || !steppingRight) {
-					horse.jump();
-				}
-			}
 
-			if (stepTime > 0) {
-				stepTime -= dt;
-			} else if (!(steppingLeft && steppingRight)) {
-				if (steppingLeft) {
-					horse.stepLeft();
-					stepTime = timePerStep;
-				} else if (steppingRight) {
-					horse.stepRight();
-					stepTime = timePerStep;
+				if (stepTime > 0) {
+					stepTime -= dt;
+				} else if (!(steppingLeft && steppingRight)) {
+					if (steppingLeft) {
+						horse.stepLeft();
+						stepTime = timePerStep;
+					} else if (steppingRight) {
+						horse.stepRight();
+						stepTime = timePerStep;
+					}
 				}
 			}
 
@@ -375,7 +525,11 @@ class PlayState extends elke.gamestate.GameState {
 			targetOffY += (ty - targetOffY) * 0.4;
 
 			wx += ((game.s2d.width * 0.5 - horse.x) - wx - d.x) * 0.3;
-			wy += ((game.s2d.height * ty - (horse.y - 64) - d.y) - wy) * 0.5;
+			if (!horse.sitting) {
+				wy += ((game.s2d.height * ty - (horse.y - 64) - d.y) - wy) * 0.5;
+			} else {
+				wy += ((game.s2d.height * ty - (initialChoppY - 24) - d.y) - wy) * 0.5;
+			}
 		} else {
 			rope.horseFellOff = true;
 		}

@@ -267,6 +267,8 @@ class Horse extends Entity2D {
 		PlayState.instance.stopAllMusic();
 	}
 
+	public var sitting = true;
+
 	public var landed = false;
 	public function land() {
 		landed = true;
@@ -388,10 +390,6 @@ class Horse extends Entity2D {
 	}
 
 	public function attack() {
-		if (landed) {
-			return;
-		}
-
 		if (hasGun) {
 			shoot();
 		}
@@ -434,14 +432,42 @@ class Horse extends Entity2D {
 		updateArmAnim();
 	}
 
+	public function jumpOffChopper() {
+		if (!sitting) {
+			return;
+		}
+
+		sitting = false;
+		jumping = true;
+
+		offsetY = 0;
+		inAir = false;
+		vy = -jumpPower * maxJumpSpeed * (0.2 +  0.8 * (chargeTime / totalChargeTime));
+		jumping = true;
+		crouching = false;
+
+		Game.instance.sound.playWobble(hxd.Res.sound.crouch, 0.4, 0.05);
+	}
+
 	var vy = 0.;
 
 	public var aimX = 0.;
 	public var aimY = 0.;
 	var pointDir = 0.;
 
+	public var landedFirstTime = false;
+
 	override function update(dt:Float) {
 		super.update(dt);
+
+		if (sitting) {
+			sprite.animation.play("sitting");
+			arm.visible = false;
+			gun.visible = false;
+			chargeUpProgress.visible = false;
+			sword.visible = false;
+			return;
+		}
 
 		slashTime -= dt;
 		shootTime -= dt;
@@ -480,7 +506,9 @@ class Horse extends Entity2D {
 		chargeUpProgress.scaleX = (chargeTime / totalChargeTime);
 		chargeUpProgress.alpha = chargeTime < totalChargeTime ? 0.5 : 1.0;
 
-		y = Math.max(-550, y);
+		if (landedFirstTime) {
+			y = Math.max(-550, y);
+		}
 
 		armRotOffset *= 0.6;
 
@@ -543,10 +571,13 @@ class Horse extends Entity2D {
 					vy += gravity;
 					inAir = true;
 				}
+
 				if (inAir && y >= 0) {
 					jumping = false;
 					sprite.animation.play("left");
 					Game.instance.sound.playWobble(hxd.Res.sound.land);
+					PlayState.instance.onHorseLanded();
+					landedFirstTime = true;
 				}
 
 				x = Math.max(32, Math.min(Const.GAP_SIZE - 32, x));
