@@ -27,6 +27,8 @@ class HandEnemy extends Enemy {
 
 	public var beingControlled = false;
 
+	var bar: HpBar;
+
 	public function new(mirrored = false, ?p) {
 		super(p);
 		sprite = hxd.Res.img.handenemy_tilesheet.toSprite2D(this);
@@ -38,6 +40,9 @@ class HandEnemy extends Enemy {
 
 		alpha = -Math.random() * 0.5;
 		sprite.animation.play("closed", true, false, Math.random());
+		bar = new HpBar(this);
+		bar.maxHp = health;
+		bar.y = 90;
 	}
 
 	var anX = .0;
@@ -63,9 +68,12 @@ class HandEnemy extends Enemy {
 			dead = true;
 			vx = Math.random() * 10 - 5;
 			vy = -5 - Math.random() * 9;
-			vr = (Math.random() - 0.5) * 4;
+			vr = (Math.random() - 0.5) * 1;
 			Game.instance.sound.playWobble(hxd.Res.sound.handdead, 0.5);
 		}
+
+		bar.hp = health;
+		bar.visible = sprite.visible;
 
 		htime = 0.05;
 		sprite.color.set(1000, 1000, 1000);

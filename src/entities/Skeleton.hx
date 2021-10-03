@@ -7,11 +7,17 @@ class Skeleton extends Enemy {
 	public var sprite : Sprite;
 	public var health = 30.0;
 
+	var bar : HpBar;
+
 	public function new(?p) {
 		super(p);
 		sprite = hxd.Res.img.skelgeon_tilesheet.toSprite2D(this);
 		sprite.originX = sprite.originY = 24;
 		sprite.animation.play("idle", true, false, Math.random());
+
+		bar = new HpBar(this);
+		bar.maxHp = health;
+		bar.y = 40;
 	}
 
 	var htime = 0.0;
@@ -31,6 +37,8 @@ class Skeleton extends Enemy {
 			vr = (Math.random() - 0.5) * 4;
 			Game.instance.sound.playWobble(hxd.Res.sound.eyedead);
 		}
+
+		bar.hp = health;
 
 		htime = 0.05;
 		sprite.color.set(1000, 1000, 1000);

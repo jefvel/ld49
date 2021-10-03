@@ -6,12 +6,18 @@ import elke.graphics.Sprite;
 class Eye extends Enemy {
 	var sprite : Sprite;
 	public var health = 15.0;
+	var bar : HpBar;
 
 	public function new(?p) {
 		super(p);
 		sprite = hxd.Res.img.eye_tilesheet.toSprite2D(this);
 		sprite.originX = sprite.originY = 16;
 		sprite.animation.play("idle", true, false, Math.random());
+
+		bar = new HpBar(this);
+		bar.maxHp = health;
+
+		bar.y = 20;
 	}
 
 	var htime = 0.0;
@@ -39,6 +45,8 @@ class Eye extends Enemy {
 				sprite.animation.play("idle", true, false, Math.random());
 			}
 		});
+
+		bar.hp = health;
 	}
 
 	var vx = .0;

@@ -190,6 +190,7 @@ class Horse extends Entity2D {
 	//public var lives = 3;
 	public var lives = 1;
 
+	public var hasBeenHit = false;
 	public function hitByEnemy() {
 		if (dead) {
 			return;
@@ -209,6 +210,8 @@ class Horse extends Entity2D {
 		Game.instance.sound.playWobble(hxd.Res.sound.hurt, 0.3, 0.05);
 		PlayState.instance.doShake();
 		Game.instance.freeze(3);
+
+		hasBeenHit = true;
 
 		if (hasSword) {
 			dropSword();
@@ -421,6 +424,7 @@ class Horse extends Entity2D {
 		}
 
 		hasGun = false;
+		ammo = 0;
 
 		var s = new DroppedItem(gun.tile, parent);
 		var p = gun.localToGlobal();
@@ -531,6 +535,11 @@ class Horse extends Entity2D {
 		positionEquipment();
 
 		sprite.scaleX = walkingRight ? 1 : -1;
+
+		var god = PlayState.instance.god;
+		if (god.dead) {
+			sprite.scaleX = god.x < x ? -1 : 1;
+		}
 
 		if (!fellOff) {
 			var rotMultiplier = 1.0;

@@ -80,25 +80,23 @@ class God extends Entity2D {
 	public var health = 200.;
 
 	var eyePositions = [
-		/*
 		{x : -120, y: -140},
 		{x : 120, y: -140},
 
 		{x : -160, y: -120},
 		{x : -180, y: -80},
-		{x : -170, y: -40},
+	// {x : -170, y: -40},
 		{x : -150, y: 0},
 		{x : -120, y: 30},
 
 		{x : 160, y: -120},
 		{x : 180, y: -80},
-		{x : 170, y: -40},
+	//	{x : 170, y: -40},
 		{x : 150, y: 0},
 		{x : 120, y: 30},
 
 		{x : 60, y: 35},
 		{x : -60, y: 35},
-		*/
 
 		{x : 0, y: 40},
 	];
@@ -141,10 +139,10 @@ class God extends Entity2D {
 		}
 
 		enabledAttacks = [
-			// fistSlam,
-			// fistSwoosh,
+			fistSlam,
+			fistSwoosh,
 
-			skyRails,
+			// skyRails,
 		];
 
 		hands = [];

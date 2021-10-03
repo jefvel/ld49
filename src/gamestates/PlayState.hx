@@ -1,5 +1,7 @@
 package gamestates;
 
+import entities.SwordCondition;
+import entities.BulletList;
 import elke.gamestate.GameState;
 import h3d.Engine;
 import entities.Frame;
@@ -47,6 +49,9 @@ class PlayState extends elke.gamestate.GameState {
 	var timeElapsed = 0.;
 	var timeText : Text;
 
+	var bulletInfo: BulletList;
+	var swordInfo : SwordCondition;
+
 	var bossBar : ScaleGrid;
 	var bossShieldBar : ScaleGrid;
 
@@ -65,9 +70,14 @@ class PlayState extends elke.gamestate.GameState {
 
 	var introContainer: Object;
 
-	public function new() {}
+	var startCooldown = 0.;
+	public function new(cooldown = 0.0) {
+		startCooldown = cooldown;
+	}
+
 	override function onEnter() {
 		super.onEnter();
+		game.engine.backgroundColor = 0x71a5d9;
 		instance = this;
 		container = new Object(game.s2d);
 		world = new Object(container);
@@ -135,6 +145,9 @@ class PlayState extends elke.gamestate.GameState {
 		timeText.x = 16;
 		timeText.y = 16;
 
+		bulletInfo = new BulletList(container);
+		swordInfo = new SwordCondition(container);
+
 		bossBar = new ScaleGrid(hxd.Res.img.hpbar.toTile(), 3, 3, 3, 3, container);
 		bossBar.height = 9;
 		bossBar.width = 128;
@@ -177,7 +190,7 @@ class PlayState extends elke.gamestate.GameState {
 
 	var taskStrIndex = 0;
 	var untilNextChar = 1.5;
-	var taskString = "Task #1\nKill God. Don't die";
+	var taskString = "Mission #1\nKill God. Don't die";
 	var taskText: Text;
 	var tutorialImage: Bitmap;
 
@@ -188,9 +201,11 @@ class PlayState extends elke.gamestate.GameState {
 	}
 
 	public function startPhase2Music() {
-		phase1Music.fadeTo(0, 0.3, () -> {
-			phase1Music.stop();
-		});
+		if (phase1Music != null) {
+			phase1Music.fadeTo(0, 0.3, () -> {
+				phase1Music.stop();
+			});
+		}
 
 		phase2Music.fadeTo(0.5, 0.2);
 	}
@@ -228,6 +243,10 @@ class PlayState extends elke.gamestate.GameState {
 	public function stopAllMusic() {
 		if (introMusic != null) {
 			introMusic.stop();
+		}
+
+		if (winMusic != null) {
+			winMusic.stop();
 		}
 
 		if (phase1Music != null) {
@@ -312,6 +331,10 @@ class PlayState extends elke.gamestate.GameState {
 
 	var deathTimeout = 0.5;
 	override function onEvent(e:Event) {
+		if (startCooldown > 0) {
+			return;
+		}
+
 		if (e.kind == EPush) {
 
 			if (horse.sitting) {
@@ -403,6 +426,7 @@ class PlayState extends elke.gamestate.GameState {
 	override function update(dt:Float) {
 		super.update(dt);
 		time += dt;
+		startCooldown -= dt;
 
 		if (!startedGame) {
 			if (taskStrIndex < taskString.length) {
@@ -422,6 +446,16 @@ class PlayState extends elke.gamestate.GameState {
 
 			positionIntroThing();
 		}
+
+		bulletInfo.bullets = horse.ammo;
+		bulletInfo.y = timeText.y;
+		bulletInfo.x = game.s2d.width - 16 - 16;
+
+		swordInfo.visible = horse.hasSword && horse.landedFirstTime;
+		swordInfo.condition = horse.swordCondition;
+
+		swordInfo.y = timeText.y;
+		swordInfo.x = game.s2d.width - 16 - 32;
 
 		if (horse.sitting) {
 			chopper.y = Math.round(choppY + Math.sin(time * 2.0) * 6);
@@ -698,6 +732,8 @@ class PlayState extends elke.gamestate.GameState {
 		}
 	}
 
+	var winMusic : hxd.snd.Channel;
+
 	var heroContainer: Object;
 	public function onGodExplode() {
 		var bb = new Bitmap(Tile.fromColor(0xFFFFFFF), container);
@@ -713,6 +749,9 @@ class PlayState extends elke.gamestate.GameState {
 			heroContainer.x = Math.round((game.s2d.width - b.width) * 0.5);
 			heroContainer.y = Math.round((game.s2d.height * 0.25 - b.height * 0.5));
 
+			winMusic = game.sound.playSfx(hxd.Res.sound.winsong, 0.5, true);
+
+
 			var t = new Text(hxd.Res.fonts.picory.toFont(), heroContainer);
 			t.x = 28;
 			t.y = 64;
@@ -725,6 +764,9 @@ class PlayState extends elke.gamestate.GameState {
 
 			t.maxWidth = 144;
 			t.text = "You did it. You saved things. Great job";
+			if (!horse.hasBeenHit) {
+				t.text += "\n\nZero damage run. Nice.";
+			}
 		});
 	}
 
@@ -740,5 +782,7 @@ class PlayState extends elke.gamestate.GameState {
 	override function onLeave() {
 		super.onLeave();
 		container.remove();
+
+		stopAllMusic();
 	}
 }
