@@ -4,7 +4,7 @@
 
 
 ## Window
--D windowTitle=Horse with a Human Mask on A Tightrope
+-D windowTitle=Horse with a Human Mask on a Tightrope
 -D windowSize=1280x720
 # Uncomment if you want a static sized window
 #-D windowFixed

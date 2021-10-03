@@ -187,7 +187,8 @@ class Horse extends Entity2D {
 		updateArmAnim();
 	}
 
-	public var lives = 3;
+	//public var lives = 3;
+	public var lives = 1;
 
 	public function hitByEnemy() {
 		if (dead) {
@@ -223,6 +224,8 @@ class Horse extends Entity2D {
 
 		if (lives <= 0) {
 			onDied();
+			vy = -4;
+			vx = (Math.random() * 8 - 4) * 2.4;
 			sprite.animation.play("dead");
 		}
 	}
@@ -452,8 +455,8 @@ class Horse extends Entity2D {
 		}
 
 		if (fellOff) {
-			deadText.x = getScene().width * 0.5;
-			deadText.y = getScene().height * 0.5;
+			deadText.x = Math.round(getScene().width * 0.5);
+			deadText.y = Math.round(getScene().height * 0.25);
 			untilShowDeadText-=dt;
 			if (untilShowDeadText< 0) {
 				deadText.visible = true;

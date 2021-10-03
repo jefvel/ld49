@@ -33,7 +33,7 @@ class PlayState extends elke.gamestate.GameState {
 	var lRooftop: Bitmap;
 	var rRooftop: Bitmap;
 
-	var god: God;
+	public var god: God;
 
 	public var bullets: Array<Bullet>;
 
@@ -129,6 +129,7 @@ class PlayState extends elke.gamestate.GameState {
 
 		if (horse.hitbox.intersects(testB)) {
 			horse.hitByEnemy();
+			return true;
 		}
 
 		return false;
@@ -339,7 +340,7 @@ class PlayState extends elke.gamestate.GameState {
 				}
 
 				for (e in god.hands) {
-					if (e.dead || !e.open) {
+					if (e.dead || !e.open || e.invulnerable) {
 						continue;
 					}
 
@@ -449,7 +450,7 @@ class PlayState extends elke.gamestate.GameState {
 		if (heroContainer != null) {
 			var b = heroContainer.getBounds();
 			heroContainer.x = Math.round((game.s2d.width - b.width) * 0.5);
-			heroContainer.y = Math.round((game.s2d.height - b.height) * 0.5);
+			heroContainer.y = Math.round((game.s2d.height * 0.25 - b.height * 0.5));
 		}
 	}
 
@@ -466,7 +467,7 @@ class PlayState extends elke.gamestate.GameState {
 			var winBm = new Bitmap(hxd.Res.img.hero.toTile(), heroContainer);
 			var b = heroContainer.getBounds();
 			heroContainer.x = Math.round((game.s2d.width - b.width) * 0.5);
-			heroContainer.y = Math.round((game.s2d.height - b.height) * 0.5);
+			heroContainer.y = Math.round((game.s2d.height * 0.25 - b.height * 0.5));
 
 			var t = new Text(hxd.Res.fonts.picory.toFont(), heroContainer);
 			t.x = 28;

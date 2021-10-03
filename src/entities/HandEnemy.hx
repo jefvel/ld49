@@ -4,9 +4,19 @@ import elke.Game;
 import elke.graphics.Sprite;
 import elke.entity.Entity2D;
 
+enum HandPosition {
+	TopLeft;
+	BottomLeft;
+	TopRight;
+	BottomRight;
+}
+
 class HandEnemy extends Enemy {
-	var sprite : Sprite;
+	public var sprite : Sprite;
 	public var health = 46.0;
+	public var invulnerable = false;
+	
+	public var pos = TopLeft;
 
 	var closedTime = 3.0;
 	var openTime = 5.0;
@@ -14,6 +24,8 @@ class HandEnemy extends Enemy {
 	public var open = false;
 	var rotSpeed = 2.4;
 	var cw = Math.random() > 0.5;
+
+	public var beingControlled = false;
 
 	public function new(mirrored = false, ?p) {
 		super(p);
@@ -33,6 +45,8 @@ class HandEnemy extends Enemy {
 	public function setAnchorPos(x, y) {
 		anX = x;
 		anY = y;
+		targetX = x;
+		targetY = y;
 	}
 
 	var htime = 0.0;
@@ -70,42 +84,56 @@ class HandEnemy extends Enemy {
 	var vy = .0;
 	var vr = .0;
 
-	function openHand(){
-		tt = 0;
+	public function openHand(ttoff = 0.){
+		tt = ttoff;
 		open = true;
 		sprite.animation.play("open");
 	}
 
-	function closeHand(){
-		tt = 0;
+	public function closeHand(ttoff = 0.) {
+		tt = ttoff;
 		open = false;
 		sprite.animation.play("closed");
 	}
 
 	var tt = Math.random() * 2.;
+	public var targetX = 0.;
+	public var targetY = 0.;
+
 	var el = 0.;
 	public override function update(dt:Float) {
 		super.update(dt);
-
-		el += dt;
-		if (!dead) {
-			var t = cw ? 1 : -1;
-			x = Math.round(anX + Math.cos(el * rotSpeed * t) * 10);
-			y = Math.round(anY + Math.sin(el * rotSpeed * t) * 10);
-		}
 
 		if (alpha <= 1.0) {
 			alpha += 0.04;
 		}
 
-		tt += dt;
-		if (!open) {
-			if (tt > closedTime) {
-				openHand();
+		if (!beingControlled) {
+			el += dt;
+			if (!dead) {
+				var t = cw ? 1 : -1;
+				var tx = anX + Math.cos(el * rotSpeed * t) * 10;
+				var ty = anY + Math.sin(el * rotSpeed * t) * 10;
+
+				var dx = (tx - targetX) * 0.2;
+				var dy = (ty - targetY) * 0.2;
+
+				targetX += dx;
+				targetY += dy;
+
+				x = Math.round(targetX);
+				y = Math.round(targetY);
 			}
-		} else {
-			if (tt > openTime) {
-				closeHand();
+
+			tt += dt;
+			if (!open) {
+				if (tt > closedTime) {
+					openHand();
+				}
+			} else {
+				if (tt > openTime) {
+					closeHand();
+				}
 			}
 		}
 

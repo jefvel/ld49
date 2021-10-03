@@ -12,13 +12,20 @@ class DangerZone extends Entity2D {
 
 	var bm : Bitmap;
 
+	static var t: Tile;
+
 	public function new(delay: Float = 2.0, onDone: DangerZone -> Void, width = 100., height = 100., horizontal = false, ?p) {
 		super(p);
 		this.delay = delay;
 		this.onDone = onDone;
 
-		bm = new Bitmap(Tile.fromColor(0xbf6767, 1, 1, 0.6), this);
-		bm.tile.scaleToSize(width, height);
+		if (t == null) {
+			t = Tile.fromColor(0xbf6767, 1, 1, 0.6);
+		}
+
+		bm = new Bitmap(t, this);
+		bm.width = width;
+		bm.height = height;
 
 		if (horizontal) {
 			bm.y = -Math.round(height * 0.5);
@@ -27,6 +34,17 @@ class DangerZone extends Entity2D {
 		}
 
 		alpha = 0.;
+
+		/*
+		var s = new elke.graphics.SineDeformShader();
+
+		s.speed = 1;
+		s.amplitude = .1;
+		s.frequency = .5;
+		s.texture = bmp.tile.getTexture();
+
+		bm.addShader(s);
+		*/
 	}
 
 	override function onAdd() {

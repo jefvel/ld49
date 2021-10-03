@@ -7,6 +7,7 @@ import elke.process.Timeout;
 import h2d.Bitmap;
 import elke.graphics.Sprite;
 import elke.entity.Entity2D;
+import entities.HandEnemy.HandPosition;
 
 enum Phases {
 	Eyes;
@@ -16,14 +17,15 @@ enum Phases {
 
 enum AttackType {
 	FistSlam;
-	HandSwoosh;
+	FistSwoosh;
 	HandClap;
-	SkyLasers;
+	SkyRails;
 }
 
 typedef AttackPattern = {
 	t: AttackType,
-	attackDelay: Float,
+	canOnlyBeOne: Bool,
+	quickAttack: Float,
 }
 
 typedef Blood = {
@@ -40,12 +42,26 @@ final attackInterval3 = 4.5;
 
 final fistSlam: AttackPattern = {
 	t: FistSlam,
-	attackDelay: 15,
+	canOnlyBeOne: false,
+	quickAttack: 0.3,
 }
 
-final handSwoosh: AttackPattern = {
-	t: HandSwoosh,
-	attackDelay: 10,
+final fistSwoosh: AttackPattern = {
+	t: FistSwoosh,
+	canOnlyBeOne: false,
+	quickAttack: 0.1,
+}
+
+final handClap: AttackPattern = {
+	t: HandClap,
+	canOnlyBeOne: true,
+	quickAttack: 0.7,
+}
+
+final skyRails: AttackPattern = {
+	t: SkyRails,
+	canOnlyBeOne: true,
+	quickAttack: 0,
 }
 
 class God extends Entity2D {
@@ -55,7 +71,7 @@ class God extends Entity2D {
 
 	public var timePerAttack = attackInterval1;
 
-	public var attackTimer = 0.;
+	public var attackTimer = attackInterval1 * 0.33;
 
 	public var phase: Phases = Eyes;
 	public var shield: Bitmap;
@@ -88,13 +104,11 @@ class God extends Entity2D {
 	];
 
 	var handPositions = [
-		{x : -210, y: 0},
-		/*
-		{x : -130, y: -20},
+		{x : -210, y: 0, pos: BottomLeft },
+		{x : -130, y: -20, pos: TopLeft },
 
-		{x : 210, y: 0},
-		{x : 130, y: -20},
-		*/
+		{x : 210, y: 0, pos: BottomRight },
+		{x : 130, y: -20, pos: TopRight },
 	];
 
 	public var dead = false;
@@ -128,6 +142,7 @@ class God extends Entity2D {
 
 		enabledAttacks = [
 			fistSlam,
+			fistSwoosh,
 		];
 
 		hands = [];
@@ -194,7 +209,6 @@ class God extends Entity2D {
 	public var activeAttacks: Array<Attack> = [];
 	
 	public function removeAttacks() {
-		attackTimer = 0;
 		for (a in activeAttacks) {
 			a.remove();
 			activeAttacks.remove(a);
@@ -203,11 +217,41 @@ class God extends Entity2D {
 
 	function doAttack() {
 		attackTimer = 0;
-		var attackType = enabledAttacks[Std.int(Math.random() * enabledAttacks.length)].t;
+		if (enabledAttacks.length == 0) {
+			return;
+		}
+
+		var attackType = FistSlam;
+
+		var attackData = enabledAttacks[Std.int(Math.random() * enabledAttacks.length)];
+
+		var canUseAttack = true;
+		if (attackData.canOnlyBeOne) {
+			for (a in activeAttacks) {
+				if (a.attackType == attackData.t) {
+					canUseAttack = false;
+					break;
+				}
+			}
+		} 
+
+		if (canUseAttack) {
+			attackTimer = attackData.quickAttack * timePerAttack;
+			attackType = attackData.t;
+		}
+
 		var attack: Attack = null;
+		var c = PlayState.instance.attackContainer;
 		attack = switch(attackType) {
-			case FistSlam: new FistSlam(PlayState.instance.attackContainer);
-			default: new FistSlam(PlayState.instance.attackContainer);
+			case FistSlam: new FistSlam(c);
+			case FistSwoosh: new FistSwoop(c);
+			case HandClap: new HandClap(hands, c);
+
+			default: null;
+		}
+
+		if (attack == null) {
+			return;
 		}
 
 		sprite.animation.play("mean", false, false, 0, (s) -> {
@@ -229,7 +273,7 @@ class God extends Entity2D {
 		var yoffTarget = 0.;
 		if (paused) {
 			yoffTarget = 200;
-		} else {
+		} else if (!PlayState.instance.horse.dead) {
 			attackTimer += dt;
 			if (attackTimer > timePerAttack) {
 				doAttack();
@@ -397,7 +441,8 @@ class God extends Entity2D {
 		sprite.animation.play("hurt");
 		paused = true;
 
-		enabledAttacks.push(handSwoosh);
+		enabledAttacks.push(handClap);
+		//enabledAttacks.push(skyRails);
 
 		new Timeout(1.2, () -> {
 			sprite.animation.play("mean");
@@ -411,6 +456,7 @@ class God extends Entity2D {
 			handsStarted = true;
 			for (p in handPositions) {
 				var e = new HandEnemy(p.x < 0, this);
+				e.pos = p.pos;
 				e.setAnchorPos(
 					Math.round((p.x) * 1.5),
 					Math.round((p.y + 40) * 1.5)
@@ -428,6 +474,8 @@ class God extends Entity2D {
 
 		removeAttacks();
 		timePerAttack = attackInterval3;
+
+		enabledAttacks.remove(handClap);
 
 		sprite.animation.play("hurt");
 		paused = true;
