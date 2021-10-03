@@ -1,0 +1,51 @@
+{ "frames": [
+   {
+    "filename": "rail 0.aseprite",
+    "frame": { "x": 23, "y": 0, "w": 21, "h": 254 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 5, "y": 0, "w": 21, "h": 254 },
+    "sourceSize": { "w": 32, "h": 256 },
+    "duration": 50
+   },
+   {
+    "filename": "rail 1.aseprite",
+    "frame": { "x": 0, "y": 252, "w": 20, "h": 253 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 4, "y": 0, "w": 20, "h": 253 },
+    "sourceSize": { "w": 32, "h": 256 },
+    "duration": 50
+   },
+   {
+    "filename": "rail 2.aseprite",
+    "frame": { "x": 0, "y": 0, "w": 22, "h": 251 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 3, "y": 1, "w": 22, "h": 251 },
+    "sourceSize": { "w": 32, "h": 256 },
+    "duration": 50
+   },
+   {
+    "filename": "rail 3.aseprite",
+    "frame": { "x": 21, "y": 255, "w": 20, "h": 251 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 3, "y": 1, "w": 20, "h": 251 },
+    "sourceSize": { "w": 32, "h": 256 },
+    "duration": 50
+   }
+ ],
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.3-beta6-x64",
+  "image": "rail.png",
+  "format": "RGBA8888",
+  "size": { "w": 44, "h": 506 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "slices": [
+  ]
+ }
+}

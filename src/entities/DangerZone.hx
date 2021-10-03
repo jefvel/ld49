@@ -14,10 +14,13 @@ class DangerZone extends Entity2D {
 
 	static var t: Tile;
 
-	public function new(delay: Float = 2.0, onDone: DangerZone -> Void, width = 100., height = 100., horizontal = false, ?p) {
+	var silent = false;
+
+	public function new(delay: Float = 2.0, onDone: DangerZone -> Void, width = 100., height = 100., horizontal = false, silent = false, ?p) {
 		super(p);
 		this.delay = delay;
 		this.onDone = onDone;
+		this.silent = silent;
 
 		if (t == null) {
 			t = Tile.fromColor(0xbf6767, 1, 1, 0.6);
@@ -45,11 +48,13 @@ class DangerZone extends Entity2D {
 
 		bm.addShader(s);
 		*/
+		if (!this.silent) {
+			Game.instance.sound.playSfx(hxd.Res.sound.dangerzone, 0.3);
+		}
 	}
 
 	override function onAdd() {
 		super.onAdd();
-		Game.instance.sound.playSfx(hxd.Res.sound.dangerzone, 0.3);
 	}
 
 	override function update(dt:Float) {

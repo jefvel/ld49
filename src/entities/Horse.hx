@@ -263,6 +263,8 @@ class Horse extends Entity2D {
 
 		t.maxWidth = 174;
 		t.text = "You can do it. Click to retry.";
+
+		PlayState.instance.stopAllMusic();
 	}
 
 	public var landed = false;

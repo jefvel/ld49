@@ -45,6 +45,14 @@ class PlayState extends elke.gamestate.GameState {
 	var bossBar : ScaleGrid;
 	var bossShieldBar : ScaleGrid;
 
+	var introMusic: hxd.snd.Channel;
+
+	var phase1Music: hxd.snd.Channel;
+	var phase2Music: hxd.snd.Channel;
+	var phase3Music: hxd.snd.Channel;
+
+	public var startedGame = false;
+
 	public function new() {}
 	override function onEnter() {
 		super.onEnter();
@@ -108,6 +116,61 @@ class PlayState extends elke.gamestate.GameState {
 
 		bossBar.visible = false;
 		bossShieldBar.visible = false;
+
+		startMusic();
+	}
+
+	function startMusic() {
+		phase1Music = game.sound.playSfx(hxd.Res.sound.phase1music, 0.5, true);
+
+		phase2Music = game.sound.playSfx(hxd.Res.sound.phase2music, 0., true);
+
+		phase3Music = game.sound.playSfx(hxd.Res.sound.phase3music, 0., true);
+	}
+
+	public function startPhase2Music() {
+		phase1Music.fadeTo(0, 0.3, () -> {
+			phase1Music.stop();
+		});
+
+		phase2Music.fadeTo(0.5, 0.2);
+	}
+
+	public function startPhase3Music() {
+		phase2Music.fadeTo(0, 0.3, () -> {
+			phase2Music.stop();
+		});
+
+		phase3Music.fadeTo(0.5, 0.2);
+	}
+
+	public function stopAllMusic() {
+		if (phase1Music != null) {
+			phase1Music.stop();
+			phase1Music = null;
+		}
+
+		if (phase2Music != null) {
+			phase2Music.stop();
+			phase2Music = null;
+		}
+
+		if (phase3Music != null) {
+			phase3Music.stop();
+			phase3Music = null;
+		}
+	}
+
+	public function startGame() {
+		if (startedGame) {
+			return;
+		}
+		if (introMusic != null) {
+			introMusic.stop();
+		}
+
+		
+
 	}
 
 	var maxBarWidth = 128;
@@ -135,9 +198,10 @@ class PlayState extends elke.gamestate.GameState {
 		return false;
 	}
 
+	var deathTimeout = 0.5;
 	override function onEvent(e:Event) {
 		if (e.kind == EPush) {
-			if (horse.fellOff || heroContainer != null) {
+			if ((horse.fellOff || heroContainer != null) && deathTimeout < 0) {
 				reset();
 			}
 
@@ -160,6 +224,12 @@ class PlayState extends elke.gamestate.GameState {
 			}
 		}
 		#end
+
+		if (e.kind == EKeyDown) {
+			if(e.keyCode == Key.R) {
+				reset();
+			}
+		}
 
 		if (e.kind == ERelease || e.kind == EReleaseOutside) {
 			if (e.button == 0) {
@@ -196,6 +266,8 @@ class PlayState extends elke.gamestate.GameState {
 			return;
 		}
 
+		stopAllMusic();
+
 		bossBar.alpha = 0;
 		for (s in god.skeletons) {
 			s.hurt(1000);
@@ -213,6 +285,10 @@ class PlayState extends elke.gamestate.GameState {
 
 		if (!horse.fellOff && !wonGame) {
 			timeElapsed += dt;
+		}
+
+		if (horse.dead || horse.fellOff || wonGame) {
+			deathTimeout -= dt;
 		}
 
 		if (god.phase == CenterEye && god.godEye != null) {

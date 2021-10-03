@@ -5,7 +5,7 @@ import elke.graphics.Sprite;
 
 class Eye extends Enemy {
 	var sprite : Sprite;
-	public var health = 16.0;
+	public var health = 15.0;
 
 	public function new(?p) {
 		super(p);
@@ -13,6 +13,7 @@ class Eye extends Enemy {
 		sprite.originX = sprite.originY = 16;
 		sprite.animation.play("idle", true, false, Math.random());
 	}
+
 	var htime = 0.0;
 
 	public var dead = false;
@@ -43,9 +44,18 @@ class Eye extends Enemy {
 	var vx = .0;
 	var vy = .0;
 	var vr = .0;
+	var tt = Math.random() * 3.1;
 
 	public override function update(dt:Float) {
 		super.update(dt);
+
+		tt += dt;
+		var ox = Math.cos(tt) * 4;
+		var oy = Math.sin(tt) * 4;
+		sprite.x = Math.round(ox);
+		sprite.y = Math.round(oy);
+
+
 		if (htime > 0) {
 			htime -= dt; 
 			if (htime <= 0) {

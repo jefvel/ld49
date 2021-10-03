@@ -32,7 +32,7 @@ class FistSwoop extends Attack {
 		attackX = gap;
 		attackY = 0;
 
-		var d = new DangerZone(2.5, initiateAttack, attackWidth, attackHeight, true, this);
+		var d = new DangerZone(2.5, initiateAttack, attackWidth, attackHeight, true, false, this);
 
 		d.x = attackX;
 		d.y = attackY;
@@ -82,7 +82,7 @@ class FistSwoop extends Attack {
 			}
 		}
 
-		if (Math.abs(fistBm.x - tx) < 10) {
+		if (Math.abs(fistBm.x - tx) < 20) {
 			alreadyHit = true;
 		}
 

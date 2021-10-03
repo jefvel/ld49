@@ -92,7 +92,7 @@ class HandClap extends Attack {
 		c = Math.max(1, c);
 		attackY = (ay / c);
 
-		var d = new DangerZone(1.8, initiateAttack, attackWidth, attackHeight, true, this);
+		var d = new DangerZone(1.8, initiateAttack, attackWidth, attackHeight, true, false, this);
 
 		d.x = attackX;
 		d.y = attackY;

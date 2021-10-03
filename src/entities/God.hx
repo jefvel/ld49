@@ -36,9 +36,9 @@ typedef Blood = {
 }
 
 // Attacks
-final attackInterval1 = 6.;
-final attackInterval2 = 5.;
-final attackInterval3 = 4.5;
+final attackInterval1 = 5.3;
+final attackInterval2 = 4.9;
+final attackInterval3 = 4.3;
 
 final fistSlam: AttackPattern = {
 	t: FistSlam,
@@ -61,7 +61,7 @@ final handClap: AttackPattern = {
 final skyRails: AttackPattern = {
 	t: SkyRails,
 	canOnlyBeOne: true,
-	quickAttack: 0,
+	quickAttack: 0.1,
 }
 
 class God extends Entity2D {
@@ -141,8 +141,10 @@ class God extends Entity2D {
 		}
 
 		enabledAttacks = [
-			fistSlam,
-			fistSwoosh,
+			// fistSlam,
+			// fistSwoosh,
+
+			skyRails,
 		];
 
 		hands = [];
@@ -246,6 +248,7 @@ class God extends Entity2D {
 			case FistSlam: new FistSlam(c);
 			case FistSwoosh: new FistSwoop(c);
 			case HandClap: new HandClap(hands, c);
+			case SkyRails: new SkyRails(c);
 
 			default: null;
 		}
@@ -445,6 +448,8 @@ class God extends Entity2D {
 		//enabledAttacks.push(skyRails);
 
 		new Timeout(1.2, () -> {
+			PlayState.instance.startPhase2Music();
+
 			sprite.animation.play("mean");
 			new Timeout(0.8, () -> {
 				paused = false;
@@ -476,10 +481,12 @@ class God extends Entity2D {
 		timePerAttack = attackInterval3;
 
 		enabledAttacks.remove(handClap);
+		enabledAttacks.push(skyRails);
 
 		sprite.animation.play("hurt");
 		paused = true;
 		new Timeout(1.2, () -> {
+			PlayState.instance.startPhase3Music();
 			sprite.animation.play("mean");
 			new Timeout(0.8, () -> {
 				paused = false;
