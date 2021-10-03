@@ -1,5 +1,7 @@
 package entities;
 
+import h2d.col.Bounds;
+import h2d.Text;
 import gamestates.PlayState;
 import h2d.Tile;
 import h2d.col.Point;
@@ -80,6 +82,11 @@ class Horse extends Entity2D {
 
 	var totalChargeTime = 0.4;
 	var chargeTime = 0.;
+	public var hitbox: Bounds = new Bounds();
+	public var invulnerable = false;
+
+	var invulnTime = 0.5;
+	var curInvulnTime = 0.;
 
 	function positionEquipment() {
 		if (!crouching) {
@@ -180,6 +187,8 @@ class Horse extends Entity2D {
 		updateArmAnim();
 	}
 
+	public var lives = 3;
+
 	public function hitByEnemy() {
 		if (dead) {
 			return;
@@ -189,7 +198,16 @@ class Horse extends Entity2D {
 			return;
 		}
 
+		if (invulnerable) {
+			return;
+		}
+
+		curInvulnTime = invulnTime;
+		invulnerable = true;
+
 		Game.instance.sound.playWobble(hxd.Res.sound.hurt, 0.3, 0.05);
+		PlayState.instance.doShake();
+		Game.instance.freeze(3);
 
 		if (hasSword) {
 			dropSword();
@@ -200,11 +218,13 @@ class Horse extends Entity2D {
 			dropGun();
 			return;
 		}
-		
-		dead = true;
 
-		fellOff = true;
-		sprite.animation.play("dead");
+		lives --;
+
+		if (lives <= 0) {
+			onDied();
+			sprite.animation.play("dead");
+		}
 	}
 
 	public var dead = false;
@@ -215,6 +235,11 @@ class Horse extends Entity2D {
 		if (landed) {
 			return;
 		}
+		if (dead) {
+			return;
+		}
+
+		dead = true;
 
 		Game.instance.sound.playSfx(hxd.Res.sound.death, 0.5);
 		fellOff = true;
@@ -222,6 +247,19 @@ class Horse extends Entity2D {
 		deadText.tile.dx = -95;
 		deadText.tile.dy = -32;
 		deadText.visible = false;
+
+		var t = new Text(hxd.Res.fonts.picory.toFont(), deadText);
+		t.x = 28 - 95;
+		t.y = 64 - 32;
+		t.dropShadow = {
+			dx: 1,
+			dy: 1,
+			color: 0x312c3b,
+			alpha: 0.9
+		};
+
+		t.maxWidth = 174;
+		t.text = "You can do it. Click to retry.";
 	}
 
 	public var landed = false;
@@ -332,7 +370,7 @@ class Horse extends Entity2D {
 		var r = pointDir + Math.PI;
 		var b = new Bullet(r, x + Math.cos(r) * 40, y - 78 + Math.sin(r) * 40, 0, 0.2, parent,null); 
 		b.radius = 32;
-		b.damage = 5;
+		b.damage = 6;
 		b.multiHit = true;
 		b.bulletType = Sword;
 
@@ -402,6 +440,16 @@ class Horse extends Entity2D {
 
 		slashTime -= dt;
 		shootTime -= dt;
+
+		if (invulnerable) {
+			alpha = 0.7;
+			curInvulnTime -= dt;
+			if (curInvulnTime <= 0) {
+				invulnerable = false;
+			}
+		} else {
+			alpha = 1.0;
+		}
 
 		if (fellOff) {
 			deadText.x = getScene().width * 0.5;
@@ -547,5 +595,9 @@ class Horse extends Entity2D {
 			y += vy;
 			sprite.rotation += rotSpeed;
 		}
+
+		hitbox.empty();
+		hitbox.addPos(x - 10, y - 80);
+		hitbox.addPos(x + 10, y - 17);
 	}
 }

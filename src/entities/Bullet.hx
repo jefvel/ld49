@@ -24,7 +24,7 @@ class Bullet extends Entity2D {
 	public var willRemove = false;
 
 	var lifetime = 999.;
-	public var damage = 10.0;
+	public var damage = 15.0;
 	public function new(direction, startX, startY, speed = 15., lifeTime = 999., ?p, ?t: Tile) {
 		super(p);
 		if (t != null) {

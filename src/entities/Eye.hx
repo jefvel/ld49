@@ -5,7 +5,7 @@ import elke.graphics.Sprite;
 
 class Eye extends Enemy {
 	var sprite : Sprite;
-	public var health = 20.0;
+	public var health = 16.0;
 
 	public function new(?p) {
 		super(p);

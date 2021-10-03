@@ -6,7 +6,7 @@ import elke.entity.Entity2D;
 
 class HandEnemy extends Enemy {
 	var sprite : Sprite;
-	public var health = 40.0;
+	public var health = 46.0;
 
 	var closedTime = 3.0;
 	var openTime = 5.0;

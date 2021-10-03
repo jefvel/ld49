@@ -5,8 +5,8 @@ import elke.graphics.Sprite;
 
 class GodEye extends Enemy {
 	var sprite : Sprite;
-	public var health = 100.0;
-	public var maxHealth = 100.0;
+	public var health = 90.0;
+	public var maxHealth = 90.0;
 
 	public function new(?p) {
 		super(p);

@@ -1,5 +1,6 @@
 package gamestates;
 
+import h2d.col.Bounds;
 import h2d.Tile;
 import hxd.Key;
 import h2d.ScaleGrid;
@@ -21,8 +22,9 @@ import hxd.Event;
 class PlayState extends elke.gamestate.GameState {
 	public var container:Object;
 	public var world : Object;
+	public var attackContainer: Object;
 
-	var horse: Horse;
+	public var horse: Horse;
 	var rope: Rope;
 
 	var swordCrate: Bitmap;
@@ -82,6 +84,9 @@ class PlayState extends elke.gamestate.GameState {
 
 		bullets = [];
 
+		attackContainer = new Object(world);
+
+
 		timeText = new Text(hxd.Res.fonts.picory.toFont(), container);
 		timeText.dropShadow = {
 			dx: 1,
@@ -111,6 +116,23 @@ class PlayState extends elke.gamestate.GameState {
 
 	var steppingLeft = false;
 	var steppingRight = false;
+
+	var testB = new Bounds();
+	public function tryHitHorse(sx, sy, w, h) {
+		if (horse.invulnerable) {
+			return false;
+		}
+
+		testB.empty();
+		testB.addPos(sx, sy);
+		testB.addPos(sx + w, sy + w);
+
+		if (horse.hitbox.intersects(testB)) {
+			horse.hitByEnemy();
+		}
+
+		return false;
+	}
 
 	override function onEvent(e:Event) {
 		if (e.kind == EPush) {
@@ -439,7 +461,7 @@ class PlayState extends elke.gamestate.GameState {
 			bb.remove();
 		});
 
-		new Timeout(1.5, () -> {
+		new Timeout(2.2, () -> {
 			heroContainer = new Object(container);
 			var winBm = new Bitmap(hxd.Res.img.hero.toTile(), heroContainer);
 			var b = heroContainer.getBounds();
@@ -456,10 +478,9 @@ class PlayState extends elke.gamestate.GameState {
 				alpha: 0.9
 			};
 
-			t.maxWidth = 140;
+			t.maxWidth = 144;
 			t.text = "You did it. You saved things. Great job";
 		});
-
 	}
 
 	var wonTime = 0.;

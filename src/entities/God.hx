@@ -1,5 +1,6 @@
 package entities;
 
+import elke.gamestate.GameState;
 import gamestates.PlayState;
 import elke.Game;
 import elke.process.Timeout;
@@ -13,6 +14,18 @@ enum Phases {
 	CenterEye;
 }
 
+enum AttackType {
+	FistSlam;
+	HandSwoosh;
+	HandClap;
+	SkyLasers;
+}
+
+typedef AttackPattern = {
+	t: AttackType,
+	attackDelay: Float,
+}
+
 typedef Blood = {
 	b: Bitmap,
 	vx: Float,
@@ -20,8 +33,29 @@ typedef Blood = {
 	r: Float,
 }
 
+// Attacks
+final attackInterval1 = 6.;
+final attackInterval2 = 5.;
+final attackInterval3 = 4.5;
+
+final fistSlam: AttackPattern = {
+	t: FistSlam,
+	attackDelay: 15,
+}
+
+final handSwoosh: AttackPattern = {
+	t: HandSwoosh,
+	attackDelay: 10,
+}
+
 class God extends Entity2D {
 	var sprite: Sprite;
+
+	public var enabledAttacks: Array<AttackPattern>;
+
+	public var timePerAttack = attackInterval1;
+
+	public var attackTimer = 0.;
 
 	public var phase: Phases = Eyes;
 	public var shield: Bitmap;
@@ -71,7 +105,7 @@ class God extends Entity2D {
 	public var hands: Array<HandEnemy>;
 
 	//public var skeletonCount = 10;
-	public var skeletonCount = 1;
+	public var skeletonCount = 10;
 	public var skeletons: Array<Skeleton>;
 
 	public function new(?p){
@@ -91,6 +125,10 @@ class God extends Entity2D {
 			e.y = Math.round((p.y + 40) * 1.5);
 			eyes.push(e);
 		}
+
+		enabledAttacks = [
+			fistSlam,
+		];
 
 		hands = [];
 		skeletons = [];
@@ -152,7 +190,33 @@ class God extends Entity2D {
 			sprite.visible = false;
 		});
 	}
+
+	public var activeAttacks: Array<Attack> = [];
 	
+	public function removeAttacks() {
+		attackTimer = 0;
+		for (a in activeAttacks) {
+			a.remove();
+			activeAttacks.remove(a);
+		}
+	}
+
+	function doAttack() {
+		attackTimer = 0;
+		var attackType = enabledAttacks[Std.int(Math.random() * enabledAttacks.length)].t;
+		var attack: Attack = null;
+		attack = switch(attackType) {
+			case FistSlam: new FistSlam(PlayState.instance.attackContainer);
+			default: new FistSlam(PlayState.instance.attackContainer);
+		}
+
+		sprite.animation.play("mean", false, false, 0, (s) -> {
+			sprite.animation.play("idle");
+		});
+
+		activeAttacks.push(attack);
+	}
+
 	var particles: Array<Blood> = [];
 
 	var untilExplode = 0.9;
@@ -165,6 +229,17 @@ class God extends Entity2D {
 		var yoffTarget = 0.;
 		if (paused) {
 			yoffTarget = 200;
+		} else {
+			attackTimer += dt;
+			if (attackTimer > timePerAttack) {
+				doAttack();
+			}
+		}
+
+		for (a in activeAttacks) {
+			if (a.done) {
+				activeAttacks.remove(a);
+			}
 		}
 
 		for (p in particles) {
@@ -243,7 +318,7 @@ class God extends Entity2D {
 
 			shield.alpha *= 0.98;
 
-			var sRadius = 150;
+			var sRadius = 150 + Math.sin(skRot * 1.4) * 20;
 
 			for (e in skeletons) {
 				if (e.dead) {
@@ -271,6 +346,9 @@ class God extends Entity2D {
 
 				s.x += (dx);
 				s.y += (dy);
+				
+				s.x = Math.round(s.x);
+				s.y = Math.round(s.y);
 
 				s.sprite.scaleX = s.x > 0 ? -1 : 1;
 
@@ -283,6 +361,9 @@ class God extends Entity2D {
 		if (dead) {
 			return;
 		}
+
+		removeAttacks();
+		paused = true;
 
 		sprite.animation.play("dead");
 
@@ -309,8 +390,15 @@ class God extends Entity2D {
 
 	function initHandsPhase() {
 		phase = Hands;
+
+		removeAttacks();
+		timePerAttack = attackInterval2;
+
 		sprite.animation.play("hurt");
 		paused = true;
+
+		enabledAttacks.push(handSwoosh);
+
 		new Timeout(1.2, () -> {
 			sprite.animation.play("mean");
 			new Timeout(0.8, () -> {
@@ -337,6 +425,10 @@ class God extends Entity2D {
 
 	function initLastPhase() {
 		phase = CenterEye;
+
+		removeAttacks();
+		timePerAttack = attackInterval3;
+
 		sprite.animation.play("hurt");
 		paused = true;
 		new Timeout(1.2, () -> {
