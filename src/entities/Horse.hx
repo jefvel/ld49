@@ -113,12 +113,20 @@ class Horse extends Entity2D {
 			return;
 		}
 
+		if (landed) {
+			return;
+		}
+
 		stepForward();
 		rotSpeed -= rotAcc;
 	}
 
 	public function stepRight() {
 		if (crouching || jumping) {
+			return;
+		}
+
+		if (landed) {
 			return;
 		}
 
@@ -134,6 +142,10 @@ class Horse extends Entity2D {
 
 	public function crouch() {
 		if (jumping || crouching) {
+			return;
+		}
+
+		if (landed) {
 			return;
 		}
 		
@@ -152,6 +164,10 @@ class Horse extends Entity2D {
 			return;
 		}
 
+		if (landed) {
+			return;
+		}
+
 		offsetY = 0;
 		inAir = false;
 		vy = -jumpPower * maxJumpSpeed * (0.2 +  0.8 * (chargeTime / totalChargeTime));
@@ -166,6 +182,10 @@ class Horse extends Entity2D {
 
 	public function hitByEnemy() {
 		if (dead) {
+			return;
+		}
+
+		if (landed) {
 			return;
 		}
 
@@ -192,12 +212,23 @@ class Horse extends Entity2D {
 	var deadText: Bitmap;
 	var untilShowDeadText = 2.3;
 	function onDied() {
+		if (landed) {
+			return;
+		}
+
 		Game.instance.sound.playSfx(hxd.Res.sound.death, 0.5);
 		fellOff = true;
 		deadText = new Bitmap(hxd.Res.img.deadtext.toTile(), PlayState.instance.container);
 		deadText.tile.dx = -95;
 		deadText.tile.dy = -32;
 		deadText.visible = false;
+	}
+
+	public var landed = false;
+	public function land() {
+		landed = true;
+		dropGun();
+		dropSword();
 	}
 
 	public var swordCondition = 1.;
@@ -223,6 +254,10 @@ class Horse extends Entity2D {
 
 	function shoot() {
 		if (ammo <= 0 || shootTime > 0) {
+			return;
+		}
+
+		if (landed) {
 			return;
 		}
 
@@ -310,6 +345,10 @@ class Horse extends Entity2D {
 	}
 
 	public function attack() {
+		if (landed) {
+			return;
+		}
+
 		if (hasGun) {
 			shoot();
 		}
@@ -454,6 +493,7 @@ class Horse extends Entity2D {
 				if (inAir && y >= 0) {
 					jumping = false;
 					sprite.animation.play("left");
+					Game.instance.sound.playWobble(hxd.Res.sound.land);
 				}
 
 				x = Math.max(32, Math.min(Const.GAP_SIZE - 32, x));
@@ -461,6 +501,12 @@ class Horse extends Entity2D {
 				rotSpeed = Math.min(Math.max(-maxRotSpeed, rotSpeed), maxRotSpeed);
 
 				sprite.rotation += rotSpeed * rotMultiplier;
+
+				if (landed) {
+					sprite.rotation *= 0.5;
+					rotSpeed *= 0.7;
+					sprite.animation.play("landed", true, true);
+				}
 
 				x += vx;
 				vx *= 0.5;

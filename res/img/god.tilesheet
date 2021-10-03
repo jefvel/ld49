@@ -25,6 +25,15 @@
     "spriteSourceSize": { "x": 1, "y": 20, "w": 253, "h": 142 },
     "sourceSize": { "w": 256, "h": 256 },
     "duration": 900
+   },
+   {
+    "filename": "god 3.aseprite",
+    "frame": { "x": 254, "y": 143, "w": 253, "h": 140 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 1, "y": 20, "w": 253, "h": 140 },
+    "sourceSize": { "w": 256, "h": 256 },
+    "duration": 900
    }
  ],
  "meta": {
@@ -37,7 +46,8 @@
   "frameTags": [
    { "name": "idle", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" },
    { "name": "hurt", "from": 1, "to": 1, "direction": "forward", "color": "#000000ff" },
-   { "name": "mean", "from": 2, "to": 2, "direction": "forward", "color": "#000000ff" }
+   { "name": "mean", "from": 2, "to": 2, "direction": "forward", "color": "#000000ff" },
+   { "name": "dead", "from": 3, "to": 3, "direction": "forward", "color": "#000000ff" }
   ],
   "slices": [
   ]

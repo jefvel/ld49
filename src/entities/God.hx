@@ -1,5 +1,7 @@
 package entities;
 
+import gamestates.PlayState;
+import elke.Game;
 import elke.process.Timeout;
 import h2d.Bitmap;
 import elke.graphics.Sprite;
@@ -9,6 +11,13 @@ enum Phases {
 	Eyes;
 	Hands;
 	CenterEye;
+}
+
+typedef Blood = {
+	b: Bitmap,
+	vx: Float,
+	vy: Float,
+	r: Float,
 }
 
 class God extends Entity2D {
@@ -54,13 +63,15 @@ class God extends Entity2D {
 		*/
 	];
 
+	public var dead = false;
 
 	public var eyes: Array<Eye>;
 	public var godEye: GodEye = null;
 
 	public var hands: Array<HandEnemy>;
 
-	public var skeletonCount = 10;
+	//public var skeletonCount = 10;
+	public var skeletonCount = 1;
 	public var skeletons: Array<Skeleton>;
 
 	public function new(?p){
@@ -92,18 +103,111 @@ class God extends Entity2D {
 
 	var skRot = .0;
 	var yOff = 0.;
+	var deadTime = 0.0;
+	var xOff = 0.;
+
+	var exploded = false;
+
+	function explode() {
+		if (exploded) {
+			return;
+		}
+
+		exploded = true;
+		sprite.color.set(1000, 1000, 1000);
+		Game.instance.freeze(5);
+		PlayState.instance.doShake();
+
+		PlayState.instance.onGodExplode();
+
+		if (godEye != null) {
+			godEye.remove();
+		}
+
+		var t = hxd.Res.img.blood.toTile();
+		var tiles = [];
+		for (x in 0...4) {
+			for (y in 0...4) {
+				var t = t.sub(x * 32, y * 32, 32, 32);
+				t.dx = -16;
+				t.dy = -16;
+				tiles.push(t);
+			}
+		}
+
+		for (i in 0...100) {
+			var tt = tiles[Std.int(Math.random() * tiles.length)];
+			var bm  = new Bitmap(tt, this);
+			bm.x = Math.random() * 200 - 100;
+			bm.y = Math.random() * 100 - 50;
+			particles.push({
+				b: bm,
+				vx: 2 * (Math.random() * 10 - 5),
+				vy: -5 - Math.random() * 5,
+				r: Math.random() - 0.5 ,
+			});
+		}
+
+		new Timeout(0.2, () -> {
+			sprite.visible = false;
+		});
+	}
+	
+	var particles: Array<Blood> = [];
+
+	var untilExplode = 0.9;
+
+	public var commenceFalling = false;
+	var rrrrat = 1.0;
 	override function update(dt:Float) {
 		super.update(dt);
 		time += dt;
-		var yoffTarget =0.;
+		var yoffTarget = 0.;
 		if (paused) {
 			yoffTarget = 200;
 		}
 
-		yOff += (yoffTarget - yOff) * 0.1;
+		for (p in particles) {
+			p.b.x += p.vx;
+			p.b.y += p.vy;
+			p.b.rotation += p.r;
+			p.vy += 0.5;
+			p.vx *= 0.98;
+			if (p.b.y > 400) {
+				p.b.remove();
+				particles.remove(p);
+			}
+		}
 
-		x = Math.round(originX + Math.sin(time * 0.5) * 10);
-		y = Math.round(originY + Math.cos(time * 0.7) * 30 + yOff);
+		if (dead) {
+			if (commenceFalling) {
+				deadTime += dt;
+			}
+
+			if (deadTime > 2.0) {
+				yOff += 1;
+				yOff = Math.min(yOff, 350);
+			}
+
+			if (yOff >= 350) {
+				untilExplode -= dt;
+				if (untilExplode < 0.5) {
+					rrrrat = 0;
+				}
+				if (untilExplode < 0) {
+					explode();
+				}
+			}
+
+			xOff = Math.cos(deadTime * 100) * 2.5 * rrrrat;
+		} else {
+			yOff += (yoffTarget - yOff) * 0.1;
+		}
+
+		if (!exploded) {
+			x = Math.round(originX + Math.sin(time * 0.5) * 10 + xOff);
+			y = Math.round(originY + Math.cos(time * 0.7) * 30 + yOff);
+		}
 
 		if (phase == Eyes) {
 			for (e in eyes) {
@@ -173,6 +277,16 @@ class God extends Entity2D {
 				i ++;
 			}
 		}
+	}
+
+	public function kill() {
+		if (dead) {
+			return;
+		}
+
+		sprite.animation.play("dead");
+
+		dead = true;
 	}
 
 	var handsStarted = false;

@@ -1,5 +1,7 @@
 package gamestates;
 
+import h2d.Tile;
+import hxd.Key;
 import h2d.ScaleGrid;
 import elke.Game;
 import entities.Bullet;
@@ -112,7 +114,7 @@ class PlayState extends elke.gamestate.GameState {
 
 	override function onEvent(e:Event) {
 		if (e.kind == EPush) {
-			if (horse.fellOff) {
+			if (horse.fellOff || heroContainer != null) {
 				reset();
 			}
 
@@ -127,6 +129,14 @@ class PlayState extends elke.gamestate.GameState {
 				steppingRight = true;
 			}
 		}
+
+		#if debug
+		if (e.kind == EKeyDown) {
+			if(e.keyCode == Key.O) {
+				winGame();
+			}
+		}
+		#end
 
 		if (e.kind == ERelease || e.kind == EReleaseOutside) {
 			if (e.button == 0) {
@@ -159,10 +169,19 @@ class PlayState extends elke.gamestate.GameState {
 
 	public var wonGame = false;
 	public function winGame() {
+		if (wonGame) {
+			return;
+		}
+
 		bossBar.alpha = 0;
 		for (s in god.skeletons) {
 			s.hurt(1000);
 		}
+
+		wonGame = true;
+		
+		horse.land();
+		god.kill();
 	}
 
 	override function update(dt:Float) {
@@ -388,9 +407,65 @@ class PlayState extends elke.gamestate.GameState {
 		shakeX *= 0.6;
 		shakeY *= 0.6;
 
-		world.x = Math.round(wx + shakeX);
-		world.y = Math.round(wy + shakeY);
+		if (wonGame) {
+			if (!horse.jumping) {
+				wonTime += dt;
+				god.commenceFalling = true;
+			}
+
+			if (wonTime > 1.3) {
+				var dx = -(god.x - horse.x) * 0.5;
+				var dy = -(god.y - (horse.y - 42)) * 0.5;
+				wtgx += (dx - wtgx) * .05;
+				wtgy += (dy - wtgy) * .05;
+			}
+		}
+
+		world.x = Math.round(wx + shakeX + wtgx);
+		world.y = Math.round(wy + shakeY + wtgy);
+
+		if (heroContainer != null) {
+			var b = heroContainer.getBounds();
+			heroContainer.x = Math.round((game.s2d.width - b.width) * 0.5);
+			heroContainer.y = Math.round((game.s2d.height - b.height) * 0.5);
+		}
 	}
+
+	var heroContainer: Object;
+	public function onGodExplode() {
+		var bb = new Bitmap(Tile.fromColor(0xFFFFFFF), container);
+		bb.tile.scaleToSize(game.s2d.width, game.s2d.height);
+		new Timeout(0.01, () -> {
+			bb.remove();
+		});
+
+		new Timeout(1.5, () -> {
+			heroContainer = new Object(container);
+			var winBm = new Bitmap(hxd.Res.img.hero.toTile(), heroContainer);
+			var b = heroContainer.getBounds();
+			heroContainer.x = Math.round((game.s2d.width - b.width) * 0.5);
+			heroContainer.y = Math.round((game.s2d.height - b.height) * 0.5);
+
+			var t = new Text(hxd.Res.fonts.picory.toFont(), heroContainer);
+			t.x = 28;
+			t.y = 64;
+			t.dropShadow = {
+				dx: 1,
+				dy: 1,
+				color: 0x312c3b,
+				alpha: 0.9
+			};
+
+			t.maxWidth = 140;
+			t.text = "You did it. You saved things. Great job";
+		});
+
+	}
+
+	var wonTime = 0.;
+
+	var wtgx = 0.;
+	var wtgy = 0.;
 
 	public function reset() {
 		game.states.setState(new PlayState());

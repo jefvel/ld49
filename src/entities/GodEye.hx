@@ -32,6 +32,7 @@ class GodEye extends Enemy {
 			vx = Math.random() * 10 - 5;
 			vy = -5 - Math.random() * 9;
 			vr = (Math.random() - 0.5) * 4;
+
 			Game.instance.sound.playWobble(hxd.Res.sound.eyedead);
 		}
 
@@ -40,6 +41,8 @@ class GodEye extends Enemy {
 		sprite.animation.play("hurt", false, true, 0, (s) -> {
 			if (!dead) {
 				sprite.animation.play("idle", true, false, Math.random());
+			} else {
+				sprite.animation.play("dead");
 			}
 		});
 	}

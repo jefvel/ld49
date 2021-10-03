@@ -19,7 +19,7 @@
    },
    {
     "filename": "horse 2.aseprite",
-    "frame": { "x": 52, "y": 118, "w": 56, "h": 91 },
+    "frame": { "x": 102, "y": 232, "w": 56, "h": 91 },
     "rotated": false,
     "trimmed": true,
     "spriteSourceSize": { "x": 4, "y": 37, "w": 56, "h": 91 },
@@ -52,6 +52,15 @@
     "spriteSourceSize": { "x": 3, "y": 9, "w": 59, "h": 116 },
     "sourceSize": { "w": 64, "h": 128 },
     "duration": 60
+   },
+   {
+    "filename": "horse 6.aseprite",
+    "frame": { "x": 52, "y": 118, "w": 49, "h": 117 },
+    "rotated": false,
+    "trimmed": true,
+    "spriteSourceSize": { "x": 4, "y": 11, "w": 49, "h": 117 },
+    "sourceSize": { "w": 64, "h": 128 },
+    "duration": 100
    }
  ],
  "meta": {
@@ -59,14 +68,15 @@
   "version": "1.3-beta6-x64",
   "image": "horse.png",
   "format": "RGBA8888",
-  "size": { "w": 181, "h": 232 },
+  "size": { "w": 181, "h": 323 },
   "scale": "1",
   "frameTags": [
    { "name": "left", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" },
    { "name": "right", "from": 1, "to": 1, "direction": "forward", "color": "#000000ff" },
    { "name": "crouch", "from": 2, "to": 2, "direction": "forward", "color": "#000000ff" },
    { "name": "jumping", "from": 3, "to": 4, "direction": "forward", "color": "#000000ff" },
-   { "name": "dead", "from": 5, "to": 5, "direction": "forward", "color": "#000000ff" }
+   { "name": "dead", "from": 5, "to": 5, "direction": "forward", "color": "#000000ff" },
+   { "name": "landed", "from": 6, "to": 6, "direction": "forward", "color": "#000000ff" }
   ],
   "slices": [
   ]
