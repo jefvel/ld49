@@ -98,6 +98,11 @@ class Game extends hxd.App {
 		runInitConf();
 	}
 
+    var freezeFrames = 0;
+    public function freeze(frames = 1) {
+        freezeFrames = frames;
+    }
+
 	function runInitConf() {
 		if (conf == null) {
 			return;
@@ -169,6 +174,11 @@ class Game extends hxd.App {
         timeAccumulator += dt;
         while (timeAccumulator > tickTime && maxTicksPerUpdate > 0) {
             timeAccumulator -= tickTime;
+            if (freezeFrames > 0) {
+                freezeFrames --;
+                continue;
+            }
+
 			for (p in processes) {
 				p.update(tickTime);
 			}

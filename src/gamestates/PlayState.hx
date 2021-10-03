@@ -1,5 +1,6 @@
 package gamestates;
 
+import elke.Game;
 import entities.Bullet;
 import h2d.col.Point;
 import entities.God;
@@ -15,8 +16,8 @@ import h2d.Text;
 import hxd.Event;
 
 class PlayState extends elke.gamestate.GameState {
-	var container:Object;
-	var world : Object;
+	public var container:Object;
+	public var world : Object;
 
 	var horse: Horse;
 	var rope: Rope;
@@ -32,6 +33,9 @@ class PlayState extends elke.gamestate.GameState {
 	public var bullets: Array<Bullet>;
 
 	public static var instance: PlayState;
+
+	var timeElapsed = 0.;
+	var timeText : Text;
 
 	public function new() {}
 	override function onEnter() {
@@ -71,6 +75,17 @@ class PlayState extends elke.gamestate.GameState {
 		rRooftop.x = Const.GAP_SIZE;
 
 		bullets = [];
+
+		timeText = new Text(hxd.Res.fonts.picory.toFont(), container);
+		timeText.dropShadow = {
+			dx: 1,
+			dy: 1,
+			color: 0x312c3b,
+			alpha: 0.8,
+		}
+
+		timeText.x = 16;
+		timeText.y = 16;
 	}
 
 	var timeTilCrouch = 0.1;
@@ -117,9 +132,36 @@ class PlayState extends elke.gamestate.GameState {
 
 	var targetOffY = 0.7;
 
+	var shakeY = 0.;
+	var shakeX = 0.;
+	public function doShake() {
+		var intensity = 10.;
+		shakeX = (Math.random() * 2 - 1) * intensity;
+		shakeY = (Math.random() * 2 - 1) * intensity;
+	}
+
 	override function update(dt:Float) {
 		super.update(dt);
 		time += dt;
+
+		if (!horse.fellOff) {
+			timeElapsed += dt;
+		}
+
+		var minutes = Math.floor(timeElapsed / 60);
+		var seconds = timeElapsed - minutes * 60;
+		var extraZero = minutes < 10 ? '0' : '';
+		var extraSecondZero = seconds < 10 ? '0' : '';
+		var hundredsSplit = '${seconds}'.split('.');
+		var hundreds = "000";
+		if (hundredsSplit.length > 1) {
+			hundreds = '${hundredsSplit[1].substr(0, 3)}';
+			while(hundreds.length < 3){
+				hundreds = "0" + hundreds;
+			}
+		}
+
+		timeText.text = '$extraZero$minutes:$extraSecondZero${Math.floor(seconds)}:$hundreds';
 
 		if (!horse.fellOff) {
 			if (steppingLeft && steppingRight) {
@@ -196,7 +238,63 @@ class PlayState extends elke.gamestate.GameState {
 					var totalRadius = 25 + b.radius;
 					if (distSq < totalRadius * totalRadius) {
 						game.sound.playSfx(hxd.Res.sound.gunhit);
+						game.freeze(2);
 						e.hurt(b.damage);
+						if (e.dead) {
+							god.playHurt();
+						}
+						horse.onBulletHitEnemy(b, e);
+						b.willRemove = true;
+						if (!b.multiHit) {
+							b.remove();
+						}
+					}
+				}
+
+				for (e in god.hands) {
+					if (e.dead || !e.open) {
+						continue;
+					}
+
+					var ex = e.x + god.x;
+					var ey = e.y + god.y;
+					var dx = ex - b.x;
+					var dy = ey - b.y;
+					var distSq = dx * dx + dy * dy;
+					var totalRadius = 25 + b.radius;
+					if (distSq < totalRadius * totalRadius) {
+						game.sound.playSfx(hxd.Res.sound.gunhit);
+						game.freeze(2);
+						e.hurt(b.damage);
+						if (e.dead) {
+							god.playHurt();
+						}
+						horse.onBulletHitEnemy(b, e);
+						b.willRemove = true;
+						if (!b.multiHit) {
+							b.remove();
+						}
+					}
+				}
+
+				for (e in god.skeletons) {
+					if (e.dead) {
+						continue;
+					}
+
+					var ex = e.x + god.x;
+					var ey = e.y + god.y;
+					var dx = ex - b.x;
+					var dy = ey - b.y;
+					var distSq = dx * dx + dy * dy;
+					var totalRadius = 25 + b.radius;
+					if (distSq < totalRadius * totalRadius) {
+						game.sound.playSfx(hxd.Res.sound.gunhit);
+						game.freeze(2);
+						e.hurt(b.damage);
+						if (e.dead) {
+							god.playHurt();
+						}
 						horse.onBulletHitEnemy(b, e);
 						b.willRemove = true;
 						if (!b.multiHit) {
@@ -207,8 +305,11 @@ class PlayState extends elke.gamestate.GameState {
 			}
 		}
 
-		world.x = Math.round(wx);
-		world.y = Math.round(wy);
+		shakeX *= 0.6;
+		shakeY *= 0.6;
+
+		world.x = Math.round(wx + shakeX);
+		world.y = Math.round(wy + shakeY);
 	}
 
 	public function reset() {

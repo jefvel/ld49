@@ -1,5 +1,6 @@
 package entities;
 
+import gamestates.PlayState;
 import h2d.Tile;
 import h2d.col.Point;
 import elke.graphics.Sprite;
@@ -188,9 +189,15 @@ class Horse extends Entity2D {
 
 	public var dead = false;
 
+	var deadText: Bitmap;
+	var untilShowDeadText = 2.3;
 	function onDied() {
 		Game.instance.sound.playSfx(hxd.Res.sound.death, 0.5);
 		fellOff = true;
+		deadText = new Bitmap(hxd.Res.img.deadtext.toTile(), PlayState.instance.container);
+		deadText.tile.dx = -95;
+		deadText.tile.dy = -32;
+		deadText.visible = false;
 	}
 
 	public var swordCondition = 1.;
@@ -231,6 +238,8 @@ class Horse extends Entity2D {
 		var r = pointDir + Math.PI;
 		var b = new Bullet(r, x + Math.cos(r) * 40, y - 78 + Math.sin(r) * 40, parent, hxd.Res.img.shot.toTile());
 
+		PlayState.instance.doShake();
+
 		arm.animation.play("shoot", false, true, 0, (s) -> {
 			updateArmAnim();
 		});
@@ -259,9 +268,9 @@ class Horse extends Entity2D {
 	var slashVelocity = 7;
 	var slashRatio = 1.;
 
-	public function onBulletHitEnemy(b:Bullet, e: Eye) {
+	public function onBulletHitEnemy(b:Bullet, e: Enemy) {
 		if (b.bulletType == Sword) {
-			swordCondition -= 0.05;
+			swordCondition -= (1 / 16);
 			if (swordCondition <= 0) {
 				dropSword();
 			}
@@ -293,6 +302,7 @@ class Horse extends Entity2D {
 		b.bulletType = Sword;
 
 		Game.instance.sound.playWobble(hxd.Res.sound.slash, 0.3, 0.05);
+		PlayState.instance.doShake();
 
 		arm.animation.play("slash", false, true, 0, (s) -> {
 			arm.animation.play("sword");
@@ -310,6 +320,10 @@ class Horse extends Entity2D {
 	}
 
 	function dropSword() {
+		if (!hasSword) {
+			return;
+		}
+
 		hasSword = false;
 		var s = new DroppedItem(sword.tile, parent);
 		var p = sword.localToGlobal();
@@ -350,6 +364,15 @@ class Horse extends Entity2D {
 		slashTime -= dt;
 		shootTime -= dt;
 
+		if (fellOff) {
+			deadText.x = getScene().width * 0.5;
+			deadText.y = getScene().height * 0.5;
+			untilShowDeadText-=dt;
+			if (untilShowDeadText< 0) {
+				deadText.visible = true;
+			}
+		}
+
 		var s = getScene();
 		if (s != null) {
 			aimX = s.mouseX - parent.x;
@@ -365,7 +388,7 @@ class Horse extends Entity2D {
 		chargeUpProgress.scaleX = (chargeTime / totalChargeTime);
 		chargeUpProgress.alpha = chargeTime < totalChargeTime ? 0.5 : 1.0;
 
-		y = Math.max(-600, y);
+		y = Math.max(-550, y);
 
 		armRotOffset *= 0.6;
 

@@ -2,18 +2,18 @@ package entities;
 
 import elke.Game;
 import elke.graphics.Sprite;
-import elke.entity.Entity2D;
 
-class Eye extends Enemy {
-	var sprite : Sprite;
-	public var health = 20.0;
+class Skeleton extends Enemy {
+	public var sprite : Sprite;
+	public var health = 15.0;
 
 	public function new(?p) {
 		super(p);
-		sprite = hxd.Res.img.eye_tilesheet.toSprite2D(this);
-		sprite.originX = sprite.originY = 16;
+		sprite = hxd.Res.img.skelgeon_tilesheet.toSprite2D(this);
+		sprite.originX = sprite.originY = 24;
 		sprite.animation.play("idle", true, false, Math.random());
 	}
+
 	var htime = 0.0;
 
 	public var dead = false;
