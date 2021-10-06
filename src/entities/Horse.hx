@@ -264,7 +264,7 @@ class Horse extends Entity2D {
 
 		var t = new Text(hxd.Res.fonts.picory.toFont(), deadText);
 		t.x = 28 - 95;
-		t.y = 64 - 32;
+		t.y = 64 - 30;
 		t.dropShadow = {
 			dx: 1,
 			dy: 1,
@@ -529,6 +529,10 @@ class Horse extends Entity2D {
 		gun.visible = hasGun && !jumping;
 
 		arm.visible = jumping;
+
+		if (dead) {
+			arm.visible = false;
+		}
 
 		pointDir = Math.atan2((y + arm.y) - aimY, x - aimX);
 		arm.rotation = pointDir;

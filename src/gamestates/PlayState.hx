@@ -126,14 +126,6 @@ class PlayState extends elke.gamestate.GameState {
 		world.x = Math.round(wx);
 		world.y = Math.round(wy);
 
-		swordCrate = new Bitmap(hxd.Res.img.swordcrate.toTile(), world);
-		swordCrate.x = 0 - 64 - 20; 
-		swordCrate.y = -64;
-
-		gunCrate = new Bitmap(hxd.Res.img.guncrate.toTile(), world);
-		gunCrate.x = Const.GAP_SIZE + 20;
-		gunCrate.y = -64;
-
 		var rt = hxd.Res.img.rooftop.toTile();
 		lRooftop = new Bitmap(rt, world);
 		lRooftop.y = -8;
@@ -142,6 +134,14 @@ class PlayState extends elke.gamestate.GameState {
 		rRooftop = new Bitmap(rt, world);
 		rRooftop.y = -8;
 		rRooftop.x = Const.GAP_SIZE;
+
+		swordCrate = new Bitmap(hxd.Res.img.swordcrate.toTile(), world);
+		swordCrate.x = 0 - 64 - 20; 
+		swordCrate.y = -60;
+
+		gunCrate = new Bitmap(hxd.Res.img.guncrate.toTile(), world);
+		gunCrate.x = Const.GAP_SIZE + 20;
+		gunCrate.y = -60;
 
 		bullets = [];
 
