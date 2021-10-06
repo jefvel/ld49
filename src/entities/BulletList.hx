@@ -22,7 +22,9 @@ class BulletList extends Entity2D {
 		var i = 0;
 		var multiplier = 1.0;
 		for (b in bulletSprites) {
-			b.y += (5 + i * tSpacing - b.y) * (0.8 * multiplier);
+			var bv = (5 + i * tSpacing - b.y) * (0.8 * multiplier);
+			b.y += bv;
+			b.b.rotation = -bv * 0.03;
 			b.b.y = Math.round(b.y);
 			i ++;
 

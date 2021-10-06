@@ -4,6 +4,8 @@ class Const {
     // Pixel scaling for the 2d scene
 	public static inline final PIXEL_SIZE = 2;
 
+    public static inline final SCOREBOARD_ID = 10882;
+
     public static inline final GAP_SIZE = 1000.;
     public static inline final BULLETS_PER_GUN = 12;
 

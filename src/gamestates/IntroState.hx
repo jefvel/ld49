@@ -18,6 +18,10 @@ class IntroState extends GameState {
 
 	override function onEvent(e:Event) {
 		super.onEvent(e);
+		if (container == null) {
+			return;
+		}
+
 		if (e.kind == EPush) {
 			if (e.button == 0) {
 				if (f.animation.currentFrame == 8) {
@@ -41,6 +45,13 @@ class IntroState extends GameState {
 
 	override function onEnter() {
 		super.onEnter();
+		var n = Newgrounds.instance;
+
+		if (GameSaveData.getCurrent().playedIntro) {
+			goToGame(true);
+			return;
+		}
+
 		container = new Object(game.s2d);
 		f = hxd.Res.img.intro_tilesheet.toSprite2D(container);
 		f.x = Math.round((game.s2d.width - 128) * 0.5);
@@ -60,22 +71,38 @@ class IntroState extends GameState {
 	}
 
 	var exited = false;
-	function goToGame() {
+	function goToGame(instant = false) {
+		if (exited) {
+			return;
+		}
+
+		var inTime = 0.5;
+		var outTime = .5;
+		if (instant) {
+			inTime = 0.0;
+			outTime = 0.3;
+		}
+
 		exited = true;
-		Transition.to(() -> {
+		var t = Transition.to(() -> {
 			game.states.setState(new PlayState(1));
-		});
+		}, inTime, outTime);
 	}
 
 	override function update(dt:Float) {
 		super.update(dt);
-
-		f.x = Math.round((game.s2d.width - 128) * 0.5);
-		f.y = Math.round((game.s2d.height - 128) * 0.5);
+		if (f != null) {
+			f.x = Math.round((game.s2d.width - 128) * 0.5);
+			f.y = Math.round((game.s2d.height - 128) * 0.5);
+		}
 	}
 
 	override function onLeave() {
 		super.onLeave();
-		container.remove();
+		if (container != null) {
+			container.remove();
+		}
+		GameSaveData.getCurrent().playedIntro = true;
+		GameSaveData.getCurrent().save();
 	}
 }

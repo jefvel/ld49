@@ -85,7 +85,7 @@ class God extends Entity2D {
 
 		{x : -160, y: -120},
 		{x : -180, y: -80},
-	// {x : -170, y: -40},
+		// {x : -170, y: -40},
 		{x : -150, y: 0},
 		{x : -120, y: 30},
 
@@ -410,6 +410,8 @@ class God extends Entity2D {
 			return;
 		}
 
+		shield.visible = false;
+
 		removeAttacks();
 		paused = true;
 
@@ -451,6 +453,9 @@ class God extends Entity2D {
 	}
 
 	function initHandsPhase() {
+		if (dead) {
+			return;
+		}
 		phase = Hands;
 
 		removeAttacks();
@@ -493,6 +498,9 @@ class God extends Entity2D {
 
 	function initLastPhase() {
 		phase = CenterEye;
+		if (dead) {
+			return;
+		}
 
 		removeAttacks();
 		timePerAttack = attackInterval3;

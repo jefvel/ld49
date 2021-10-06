@@ -120,6 +120,10 @@ class Animation {
 	}
 
 	public function update(dt:Float) {
+		if (Game.instance.paused) {
+			return;
+		}
+
 		if (!playing) {
 			return;
 		}

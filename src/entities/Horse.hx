@@ -18,7 +18,7 @@ class Horse extends Entity2D {
 	var rotSpeed = 0.0;
 	var rotAcc = 0.01;
 
-	var maxRotSpeed = 0.2;
+	var maxRotSpeed = 0.014;
 	
 	public var fellOff = false;
 
@@ -144,6 +144,7 @@ class Horse extends Entity2D {
 	var maxJumpSpeed = 22.0;
 	var gravity = 0.4;
 	var jumpPower = 0.;
+	var minJumpPower = 0.4;
 	var ay = 0.;
 	var inAir = false;
 
@@ -158,7 +159,7 @@ class Horse extends Entity2D {
 		
 		crouching = true;
 		jumpPower = Math.sin(Math.PI * (x / Const.GAP_SIZE));
-		jumpPower = Math.max(0.2, jumpPower);
+		jumpPower = Math.max(minJumpPower, jumpPower);
 		offsetY = Math.round(jumpPower * 30);
 		
 		Game.instance.sound.playWobble(hxd.Res.sound.crouch, 0.3, 0.05);
@@ -253,6 +254,13 @@ class Horse extends Entity2D {
 		deadText.tile.dx = -95;
 		deadText.tile.dy = -32;
 		deadText.visible = false;
+
+		var sh = new elke.graphics.SineDeformShader();
+		sh.texture = deadText.tile.getTexture();
+		deadText.addShader(sh);
+		sh.amplitude = 0.003;
+		sh.frequency = 5.0;
+		sh.speed = 1.4;
 
 		var t = new Text(hxd.Res.fonts.picory.toFont(), deadText);
 		t.x = 28 - 95;
@@ -459,6 +467,7 @@ class Horse extends Entity2D {
 	public var aimY = 0.;
 	var pointDir = 0.;
 
+	var lookingAtGod = false;
 	public var landedFirstTime = false;
 
 	override function update(dt:Float) {
@@ -534,11 +543,16 @@ class Horse extends Entity2D {
 
 		positionEquipment();
 
-		sprite.scaleX = walkingRight ? 1 : -1;
 
 		var god = PlayState.instance.god;
 		if (god.dead) {
-			sprite.scaleX = god.x < x ? -1 : 1;
+			if (!lookingAtGod) {
+				sprite.scaleX = god.x < x ? -1 : 1;
+			}
+
+			lookingAtGod = true;
+		} else {
+			sprite.scaleX = walkingRight ? 1 : -1;
 		}
 
 		if (!fellOff) {
@@ -547,7 +561,7 @@ class Horse extends Entity2D {
 			if (!crouching) {
 				if (Math.abs(sprite.rotation) < Math.PI * 0.05) {
 					sprite.rotation *= 0.999;
-					rotSpeed *= 0.98;
+					rotSpeed *= 0.97;
 				} else {
 					rotSpeed *= 1.03;
 				}
@@ -591,7 +605,11 @@ class Horse extends Entity2D {
 
 				x = Math.max(32, Math.min(Const.GAP_SIZE - 32, x));
 			} else {
-				rotSpeed = Math.min(Math.max(-maxRotSpeed, rotSpeed), maxRotSpeed);
+				if (Math.abs(sprite.rotation) < Math.PI * 0.2) {
+					rotSpeed = Math.min(Math.max(-maxRotSpeed, rotSpeed), maxRotSpeed);
+				} else {
+					rotSpeed = Math.min(Math.max(-maxRotSpeed * 5, rotSpeed), maxRotSpeed * 5);
+				}
 
 				sprite.rotation += rotSpeed * rotMultiplier;
 

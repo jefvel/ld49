@@ -141,7 +141,12 @@ class Transition extends Interactive {
 		var eased = 0.0;
 
 		if (scalingIn) {
-			t += ctx.elapsedTime / inTime;
+			if (inTime == 0) {
+				t = 1.0;
+			} else {
+				t += ctx.elapsedTime / inTime;
+			}
+
 			if (t >= 1) {
 				scalingIn = false;
 				var finish = onFinish;

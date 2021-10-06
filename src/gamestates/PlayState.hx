@@ -1,9 +1,11 @@
 package gamestates;
 
+import hxd.Window;
+import hxd.System;
+import h2d.Interactive;
 import entities.SwordCondition;
 import entities.BulletList;
 import elke.gamestate.GameState;
-import h3d.Engine;
 import entities.Frame;
 import elke.graphics.Sprite;
 import h2d.col.Bounds;
@@ -25,10 +27,18 @@ import elke.graphics.Transition;
 import h2d.Text;
 import hxd.Event;
 
+enum ControlScheme {
+	MouseOnly;
+	KeyboardQWERTY;
+	KeyboardAZERTY;
+}
+
 class PlayState extends elke.gamestate.GameState {
 	public var container:Object;
 	public var world : Object;
 	public var attackContainer: Object;
+
+	public var controlScheme = KeyboardQWERTY;
 
 	public var chopper: Sprite;
 	public var horse: Horse;
@@ -70,6 +80,9 @@ class PlayState extends elke.gamestate.GameState {
 
 	var introContainer: Object;
 
+	var borderLeft: Bitmap;
+	var borderRight: Bitmap;
+
 	var startCooldown = 0.;
 	public function new(cooldown = 0.0) {
 		startCooldown = cooldown;
@@ -77,6 +90,8 @@ class PlayState extends elke.gamestate.GameState {
 
 	override function onEnter() {
 		super.onEnter();
+		controlScheme = GameSaveData.getCurrent().controlScheme;
+
 		game.engine.backgroundColor = 0x71a5d9;
 		instance = this;
 		container = new Object(game.s2d);
@@ -181,18 +196,130 @@ class PlayState extends elke.gamestate.GameState {
 			alpha: 0.4,
 		};
 
-		tutorialImage = new Bitmap(hxd.Res.img.tutorial.toTile(), container);
+		startGameButton = new Interactive(game.s2d.width, game.s2d.height, container);
+		startGameButton.onPush = e -> startGame();
+		startGameButton.cursor = Default;
+
+		startGameText = new Text(hxd.Res.fonts.picory.toFont(), container);
+		startGameText.textAlign = Center;
+		startGameText.text = "Click to Drop";
+		startGameText.dropShadow = {
+			dx: 1,
+			dy: 1,
+			color: 0x1b111f,
+			alpha: 0.4,
+		};
+
+		tutorialImage = hxd.Res.img.tutorial_tilesheet.toSprite2D(container);
+		var tutorialBtn = new Interactive(1, 1, tutorialImage);
+		var tutorialText = new Text(hxd.Res.fonts.picory.toFont(), tutorialBtn);
+		tutorialBtn.alpha = .5;
+		tutorialBtn.x = 10;
+		tutorialText.text = "Change control scheme";
+		tutorialBtn.y = - tutorialText.textHeight;
+		tutorialBtn.width = tutorialText.textWidth;
+		tutorialBtn.height = tutorialText.textHeight;
+		tutorialText.dropShadow = {
+			dx: 1,
+			dy: 1,
+			color: 0x1b111f,
+			alpha: 0.4,
+		};
+
+		tutorialBtn.onOver = e -> {
+			tutorialBtn.alpha = 1.0;
+		}
+
+		tutorialBtn.onOut = e -> {
+			tutorialBtn.alpha = 0.5;
+		}
+
+		tutorialBtn.onClick = e -> {
+			controlScheme = switch(controlScheme) {
+				case MouseOnly: KeyboardQWERTY;
+				case KeyboardQWERTY: KeyboardAZERTY;
+				case KeyboardAZERTY: MouseOnly;
+			}
+
+			var s = GameSaveData.getCurrent();
+			s.controlScheme = controlScheme;
+			s.save();
+		}
+
+
+		creditButton = new Interactive(0, 0, container);
+
+		var creditText = new Text(hxd.Res.fonts.picory.toFont(), creditButton);
+		creditText.textAlign = Left;
+		creditText.text = "@jefvel";
+		creditText.alpha = 0.4;
+		creditText.x = 4;
+		creditText.y = 2;
+
+		creditButton.width = creditText.textWidth + 8;
+		creditButton.height = creditText.textHeight + 4;
+		creditButton.onOver = e -> {
+			creditText.alpha = 1.0;
+		}
+
+		creditButton.onOut = e -> {
+			creditText.alpha = 0.4;
+		}
+
+		creditButton.onClick = e -> {
+			System.openURL("https://twitter.com/jefvel");
+		}
 
 		positionIntroThing();
 
+		var bgap = 200;
+		var t = Tile.fromColor(0x1b111f);
+		borderLeft = new Bitmap(t, world);
+		borderLeft.height = 4000;
+		borderLeft.width = 4000;
+		borderLeft.x = -4000 - bgap; 
+		borderLeft.y = -2000;
+
+		borderRight = new Bitmap(t, world);
+		borderRight.height = 4000;
+		borderRight.width = 4000;
+		borderRight.x = Const.GAP_SIZE + bgap; 
+		borderRight.y = -2000;
+
+		fullscreenButton = new Interactive(16, 16, container);
+		fullscreenButton.alpha = 0.2;
+
+		fullscreenButton.onOver = e -> {
+			fullscreenButton.alpha = 1.0;
+		}
+
+		fullscreenButton.onOut = e -> {
+			fullscreenButton.alpha = 0.2;
+		}
+
+		fullscreenButton.onClick = e -> {
+			var w = Window.getInstance();
+			if (w.displayMode == Windowed) {
+				w.displayMode = Fullscreen;
+			} else {
+				w.displayMode = Windowed;
+			}
+		}
+
+		var b = new Bitmap(hxd.Res.img.fullscreenicon.toTile(), fullscreenButton);
 		//startMusic();
 	}
+
+	var startGameText : Text;
+	var startGameButton : Interactive;
+
+	var fullscreenButton : Interactive;
 
 	var taskStrIndex = 0;
 	var untilNextChar = 1.5;
 	var taskString = "Mission #1\nKill God. Don't die";
 	var taskText: Text;
-	var tutorialImage: Bitmap;
+	var tutorialImage: Sprite;
 
 	function startMusic() {
 		phase1Music = game.sound.playSfx(hxd.Res.sound.phase1music, 0.5, true);
@@ -207,7 +334,9 @@ class PlayState extends elke.gamestate.GameState {
 			});
 		}
 
-		phase2Music.fadeTo(0.5, 0.2);
+		if (phase2Music != null) {
+			phase2Music.fadeTo(0.5, 0.2);
+		}
 	}
 
 	public function startPhase3Music() {
@@ -218,15 +347,18 @@ class PlayState extends elke.gamestate.GameState {
 		phase3Music.fadeTo(0.5, 0.2);
 	}
 
+	var creditButton : Interactive;
+
 	function positionIntroThing() {
+		var s = game.s2d;
 		if (introContainer != null) {
 			var b = introContainer.getBounds();
-			var s = game.s2d;
 			introContainer.y = Math.round(introFrame.borderWidth + 32.0);
 			introContainer.x = 32;
 		}
 
-		var s = game.s2d;
+		creditButton.y = introContainer.y + 4;
+		creditButton.x = Math.round(s.width - 32 - creditButton.width);
 
 		if (taskText != null) {
 			taskText.x = 32;
@@ -234,9 +366,15 @@ class PlayState extends elke.gamestate.GameState {
 		}
 
 		if (tutorialImage != null) {
-			var t = tutorialImage.tile;
-			tutorialImage.x = Math.round(s.width - t.width);
-			tutorialImage.y = Math.round(s.height - introFrame.borderWidth - t.height);
+			var twidth = 171;
+			var theight = 142;
+			tutorialImage.x = Math.round(s.width - twidth - 8);
+			tutorialImage.y = Math.round(s.height - introFrame.borderWidth - theight);
+			switch (controlScheme) {
+				case MouseOnly: tutorialImage.animation.currentFrame = 0;
+				case KeyboardQWERTY: tutorialImage.animation.currentFrame = 1;
+				case KeyboardAZERTY: tutorialImage.animation.currentFrame = 2;
+			}
 		}
 	}
 
@@ -270,8 +408,15 @@ class PlayState extends elke.gamestate.GameState {
 			return;
 		}
 
+		startGameButton.remove();
+		startGameButton = null;
+
+		startGameText.remove();
+		startGameText = null;
+
 		new Timeout(0.2, () -> {
 			introContainer.remove();
+			creditButton.remove();
 			taskText.remove();
 			tutorialImage.remove();
 			taskText = null;
@@ -308,8 +453,6 @@ class PlayState extends elke.gamestate.GameState {
 
 	var timeTilCrouch = 0.1;
 
-	var steppingLeft = false;
-	var steppingRight = false;
 
 	var testB = new Bounds();
 	public function tryHitHorse(sx, sy, w, h) {
@@ -329,6 +472,76 @@ class PlayState extends elke.gamestate.GameState {
 		return false;
 	}
 
+	var leftKeys = [Key.A, Key.LEFT];
+	var rightKeys = [Key.D, Key.RIGHT];
+
+	var rightKeysAzerty = [Key.D, Key.RIGHT];
+	var leftKeysAzerty = [Key.A, Key.LEFT];
+
+	var jumpKeys = [Key.SPACE, Key.W, Key.UP, Key.MOUSE_LEFT];
+	var jumpKeysAzerty = [Key.SPACE, Key.Z, Key.UP, Key.MOUSE_LEFT];
+
+	function leftPressed() {
+		if (controlScheme == MouseOnly) return Key.isDown(Key.MOUSE_LEFT);
+
+		if (controlScheme == KeyboardQWERTY) {
+			for (f in leftKeys) {
+				if (Key.isDown(f)) return true;
+			}
+		}
+
+		if (controlScheme == KeyboardAZERTY) {
+			for (f in leftKeysAzerty) {
+				if (Key.isDown(f)) return true;
+			}
+		}
+
+
+		return false;
+	}
+
+	function rightPressed() {
+		if (controlScheme == MouseOnly) return Key.isDown(Key.MOUSE_RIGHT);
+
+		if (controlScheme == KeyboardQWERTY) {
+			for (f in rightKeys) {
+				if (Key.isDown(f)) return true;
+			}
+		}
+
+		if (controlScheme == KeyboardAZERTY) {
+			for (f in rightKeysAzerty) {
+				if (Key.isDown(f)) return true;
+			}
+		}
+
+		return false;
+	}
+
+	function jumpPressed(){
+		if (controlScheme == MouseOnly) 
+			return Key.isDown(Key.MOUSE_LEFT) && Key.isDown(Key.MOUSE_RIGHT);
+
+		for (f in jumpKeys) {
+			if (Key.isDown(f)) return true;
+		}
+
+		if (controlScheme == KeyboardQWERTY) {
+			for (f in jumpKeys) {
+				if (Key.isDown(f)) return true;
+			}
+		}
+
+		if (controlScheme == KeyboardAZERTY) {
+			for (f in jumpKeysAzerty) {
+				if (Key.isDown(f)) return true;
+			}
+		}
+
+		return false;
+
+	}
+
 	var deathTimeout = 0.5;
 	override function onEvent(e:Event) {
 		if (startCooldown > 0) {
@@ -336,9 +549,7 @@ class PlayState extends elke.gamestate.GameState {
 		}
 
 		if (e.kind == EPush) {
-
 			if (horse.sitting) {
-				startGame();
 				return;
 			}
 
@@ -347,14 +558,9 @@ class PlayState extends elke.gamestate.GameState {
 			}
 
 			if (e.button == 0) {
-				steppingLeft = true;
 				if (horse.jumping && horse.landedFirstTime) {
 					horse.attack();
 				}
-			}
-
-			if (e.button == 1) {
-				steppingRight = true;
 			}
 		}
 
@@ -369,16 +575,6 @@ class PlayState extends elke.gamestate.GameState {
 		if (e.kind == EKeyDown) {
 			if(e.keyCode == Key.R) {
 				reset();
-			}
-		}
-
-		if (e.kind == ERelease || e.kind == EReleaseOutside) {
-			if (e.button == 0) {
-				steppingLeft = false;
-			}
-
-			if (e.button == 1) {
-				steppingRight = false;
 			}
 		}
 	}
@@ -410,8 +606,26 @@ class PlayState extends elke.gamestate.GameState {
 		stopAllMusic();
 
 		bossBar.alpha = 0;
+		for (s in god.eyes) {
+			s.hurt(1000);
+		}
 		for (s in god.skeletons) {
 			s.hurt(1000);
+		}
+		for (s in god.skeletons) {
+			s.hurt(1000);
+		}
+
+		var timeMillisecs = Std.int(timeElapsed * 1000);
+
+		Newgrounds.instance.submitHighscore(Const.SCOREBOARD_ID, timeMillisecs);
+
+		var wonGameMedal = 65677;
+		var wonGamePerfectMedal = 65679;
+
+		Newgrounds.instance.unlockMedal(wonGameMedal);
+		if (!horse.hasBeenHit) {
+			Newgrounds.instance.unlockMedal(wonGamePerfectMedal);
 		}
 
 		wonGame = true;
@@ -421,12 +635,37 @@ class PlayState extends elke.gamestate.GameState {
 	}
 
 
+	function positionBorders(){
+		var bgap = 200;
+		borderLeft.x = -4000 - bgap + world.x * 0.1; 
+		borderRight.x = Const.GAP_SIZE + bgap + world.x * 0.1; 
+	}
+
 	var choppVX = 0.;
 	var choppVY = 0.;
 	override function update(dt:Float) {
 		super.update(dt);
+
 		time += dt;
 		startCooldown -= dt;
+
+		if (fullscreenButton != null) {
+			fullscreenButton.x = game.s2d.width - 20;
+			fullscreenButton.y = game.s2d.height - 20;
+		}
+
+		if (startGameButton != null) {
+			startGameButton.width = game.s2d.width;
+			startGameButton.height = game.s2d.height;
+		}
+
+		if (startGameText != null) {
+			startGameText.visible = Math.sin((time - 5) * Math.PI) > 0 && time > 5.0;
+			startGameText.x = Math.round(game.s2d.width * 0.5);
+			startGameText.y = Math.round((game.s2d.height - introFrame.borderWidth) * 0.9);
+		}
+
+		positionBorders();
 
 		if (!startedGame) {
 			if (taskStrIndex < taskString.length) {
@@ -521,10 +760,18 @@ class PlayState extends elke.gamestate.GameState {
 
 		timeText.text = '$extraZero$minutes:$extraSecondZero${Math.floor(seconds)}:$hundreds';
 
+		var steppingLeft = leftPressed();
+		var steppingRight = rightPressed();
+		var jumping = jumpPressed();
+
 		if (!horse.fellOff) {
 			if (horse.landedFirstTime) {
-				if (steppingLeft && steppingRight) {
-					timeTilCrouch -= dt;
+				if (jumping) {
+					if (controlScheme == MouseOnly) {
+						timeTilCrouch -= dt;
+					} else {
+						timeTilCrouch = 0;
+					}
 					if (timeTilCrouch <= 0) {
 						horse.crouch();
 						timeTilCrouch = 0.1;
@@ -751,10 +998,16 @@ class PlayState extends elke.gamestate.GameState {
 
 			winMusic = game.sound.playSfx(hxd.Res.sound.winsong, 0.5, true);
 
+			var sh = new elke.graphics.SineDeformShader();
+			sh.texture = winBm.tile.getTexture();
+			winBm.addShader(sh);
+			sh.amplitude = 0.003;
+			sh.frequency = 5.0;
+			sh.speed = 1.4;
 
 			var t = new Text(hxd.Res.fonts.picory.toFont(), heroContainer);
-			t.x = 28;
-			t.y = 64;
+			t.x = 30;
+			t.y = 68;
 			t.dropShadow = {
 				dx: 1,
 				dy: 1,
