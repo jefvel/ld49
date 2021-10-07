@@ -33,10 +33,20 @@ enum ControlScheme {
 	KeyboardAZERTY;
 }
 
+typedef Cloud =  {
+	x:Float,
+	y:Float,
+	bm:Bitmap,
+	d:Float,
+}
+
 class PlayState extends elke.gamestate.GameState {
 	public var container:Object;
 	public var world : Object;
 	public var attackContainer: Object;
+
+	var cloudContainer:Object;
+	var clouds : Array<Cloud>;
 
 	public var controlScheme = KeyboardQWERTY;
 
@@ -96,6 +106,21 @@ class PlayState extends elke.gamestate.GameState {
 		instance = this;
 		container = new Object(game.s2d);
 		world = new Object(container);
+
+		cloudContainer = new Object(world);
+		var t = hxd.Res.img.cloud.toTile();
+		clouds = [];
+		for ( i in 0...10) {
+			var cloud:Cloud = {
+				bm: new Bitmap(t, cloudContainer),
+				d: 0.9 + Math.random() * 0.1,
+				x: Math.round(Math.random() * Const.GAP_SIZE * 1.4 - Const.GAP_SIZE*0.2),
+				y: Math.round(50 - Math.random() * 300),
+			}
+
+
+			clouds.push(cloud);
+		}
 
 		god = new God(world);
 		god.originX = Const.GAP_SIZE * 0.5;
@@ -977,6 +1002,13 @@ class PlayState extends elke.gamestate.GameState {
 			heroContainer.x = Math.round((game.s2d.width - b.width) * 0.5);
 			heroContainer.y = Math.round((game.s2d.height * 0.25 - b.height * 0.5));
 		}
+
+		// Position clouds
+		for(c in clouds) {
+			c.bm.x = Math.round(c.x - world.x * c.d);
+			c.bm.y = Math.round(c.y - world.y * c.d);
+		}
+
 	}
 
 	var winMusic : hxd.snd.Channel;
