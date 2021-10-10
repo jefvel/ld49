@@ -38,6 +38,7 @@ typedef Cloud =  {
 	y:Float,
 	bm:Bitmap,
 	d:Float,
+	vx: Float,
 }
 
 class PlayState extends elke.gamestate.GameState {
@@ -110,14 +111,16 @@ class PlayState extends elke.gamestate.GameState {
 		cloudContainer = new Object(world);
 		var t = hxd.Res.img.cloud.toTile();
 		clouds = [];
+		var windSpeed = (Math.random() - 0.5) * 0.1;
+
 		for ( i in 0...10) {
 			var cloud:Cloud = {
 				bm: new Bitmap(t, cloudContainer),
 				d: 0.9 + Math.random() * 0.1,
 				x: Math.round(Math.random() * Const.GAP_SIZE * 1.4 - Const.GAP_SIZE*0.2),
 				y: Math.round(50 - Math.random() * 300),
+				vx : (0.5 + Math.random() * 0.5) * windSpeed,
 			}
-
 
 			clouds.push(cloud);
 		}
@@ -1005,6 +1008,7 @@ class PlayState extends elke.gamestate.GameState {
 
 		// Position clouds
 		for(c in clouds) {
+			c.x += c.vx;
 			c.bm.x = Math.round(c.x - world.x * c.d);
 			c.bm.y = Math.round(c.y - world.y * c.d);
 		}
