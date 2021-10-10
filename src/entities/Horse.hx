@@ -276,6 +276,14 @@ class Horse extends Entity2D {
 		t.text = "You can do it. Click to retry.";
 
 		PlayState.instance.stopAllMusic();
+
+		var da = GameSaveData.getCurrent();
+		da.diedCount ++;
+		if (da.diedCount >= 5) {
+			Newgrounds.instance.unlockMedal(65742);
+		}
+
+		da.save();
 	}
 
 	public var sitting = true;
@@ -294,7 +302,6 @@ class Horse extends Entity2D {
 		swordCondition = 1.0;
 		Game.instance.sound.playWobble(hxd.Res.sound.swordget, 0.4, 0.05);
 	}
-
 
 	function giveGun() {
 		hasGun = true;
@@ -599,7 +606,7 @@ class Horse extends Entity2D {
 					inAir = true;
 				}
 
-				if (inAir && y >= 0) {
+				if ((inAir && y >= 0) || y > 100) {
 					jumping = false;
 					sprite.animation.play("left");
 					Game.instance.sound.playWobble(hxd.Res.sound.land);
@@ -648,6 +655,7 @@ class Horse extends Entity2D {
 						
 						giveGun();
 						dropSword();
+						sprite.rotation = 0;
 					}
 				} else if (x <= 0) {
 					x = 0;
@@ -655,6 +663,7 @@ class Horse extends Entity2D {
 					
 					giveSword();
 					dropGun();
+					sprite.rotation = 0;
 				}
 			}
 		} else {

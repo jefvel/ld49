@@ -8,6 +8,8 @@ class GameSaveData {
 
 	public var controlScheme:ControlScheme = KeyboardQWERTY;
 
+	public var diedCount = 0;
+
 
 	public function new() {
 	}

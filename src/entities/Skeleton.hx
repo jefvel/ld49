@@ -34,7 +34,7 @@ class Skeleton extends Enemy {
 			dead = true;
 			vx = Math.random() * 10 - 5;
 			vy = -5 - Math.random() * 9;
-			vr = (Math.random() - 0.5) * 4;
+			vr = (Math.random() - 0.5) * 1;
 			Game.instance.sound.playWobble(hxd.Res.sound.eyedead);
 		}
 

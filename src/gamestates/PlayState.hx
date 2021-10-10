@@ -48,6 +48,8 @@ class PlayState extends elke.gamestate.GameState {
 
 	var cloudContainer:Object;
 	var clouds : Array<Cloud>;
+	var skyline: Bitmap;
+	var skyline2: Bitmap;
 
 	public var controlScheme = KeyboardQWERTY;
 
@@ -111,7 +113,12 @@ class PlayState extends elke.gamestate.GameState {
 		cloudContainer = new Object(world);
 		var t = hxd.Res.img.cloud.toTile();
 		clouds = [];
-		var windSpeed = (Math.random() - 0.5) * 0.1;
+		var windSpeed = (Math.random() - 0.5) * 0.08;
+
+		skyline = new Bitmap(hxd.Res.img.skyline.toTile(), cloudContainer);
+		skyline.tile.dx = - 256;
+		skyline2 = new Bitmap(hxd.Res.img.skyline2.toTile(), cloudContainer);
+		skyline2.tile.dx = - 256;
 
 		for ( i in 0...10) {
 			var cloud:Cloud = {
@@ -1012,6 +1019,14 @@ class PlayState extends elke.gamestate.GameState {
 			c.bm.x = Math.round(c.x - world.x * c.d);
 			c.bm.y = Math.round(c.y - world.y * c.d);
 		}
+
+		skyline.x = Math.round(Const.GAP_SIZE * 0.5 - 128 - world.x * 0.9);
+		skyline.y = Math.round(game.s2d.height * 0.9 - 50 - world.y * 0.9);
+		skyline.y = Math.min(skyline.y, game.s2d.height - 128 + world.y);
+
+		skyline2.x = Math.round(Const.GAP_SIZE * 0.5 + 80 - world.x * 0.86);
+		skyline2.y = Math.round(game.s2d.height * 0.9 - 80 - world.y * 0.85);
+		skyline2.y = Math.min(skyline2.y, game.s2d.height - 128 + world.y);
 
 	}
 
