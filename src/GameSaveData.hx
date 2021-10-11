@@ -21,7 +21,11 @@ class GameSaveData {
 	#end
 
 	public function save() {
-		Save.save(current, "save", hash);
+		try {
+			Save.save(current, "save", hash);
+		} catch (e) {
+			trace(e);
+		}
 	}
 
 	public static function load() {
