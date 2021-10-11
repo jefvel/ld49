@@ -1,12 +1,14 @@
 package entities;
 
+import gamestates.PlayState;
 import elke.Game;
 import elke.graphics.Sprite;
 
 class GodEye extends Enemy {
 	var sprite : Sprite;
-	public var health = 90.0;
-	public var maxHealth = 90.0;
+	public static final MAX_HEALTH = 90.;
+	public var health = MAX_HEALTH;
+	public var maxHealth = MAX_HEALTH;
 
 	public function new(?p) {
 		super(p);
@@ -26,7 +28,11 @@ class GodEye extends Enemy {
 			return;
 		}
 
-		health -= amount;
+		var am = Math.min(amount, health);
+		PlayState.instance.doDamage(am);
+
+		health -= am;
+
 		if (health <= 0) {
 			dead = true;
 			vx = Math.random() * 10 - 5;

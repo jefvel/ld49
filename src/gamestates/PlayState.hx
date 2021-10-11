@@ -46,6 +46,9 @@ class PlayState extends elke.gamestate.GameState {
 	public var world : Object;
 	public var attackContainer: Object;
 
+	var totalProgressBG: Bitmap;
+	var totalProgressBar: Bitmap;
+
 	var cloudContainer:Object;
 	var clouds : Array<Cloud>;
 	var skyline: Bitmap;
@@ -342,7 +345,18 @@ class PlayState extends elke.gamestate.GameState {
 		}
 
 		var b = new Bitmap(hxd.Res.img.fullscreenicon.toTile(), fullscreenButton);
+		totalProgressBG = new Bitmap(Tile.fromColor(0x333333, 1, 1, 0.3), container);
+		totalProgressBG.height = 4;
+		totalProgressBG.alpha = 0.8;
+		totalProgressBar = new Bitmap(Tile.fromColor(0xffffff), totalProgressBG);
+		totalProgressBar.height = 4;
 		//startMusic();
+	}
+
+	public var totalHealth = 0.;
+	public var damageDone = 0.;
+	public function doDamage(d) {
+		damageDone += d;
 	}
 
 	var startGameText : Text;
@@ -720,6 +734,11 @@ class PlayState extends elke.gamestate.GameState {
 
 			positionIntroThing();
 		}
+
+		totalProgressBG.visible = startedGame && !god.dead;
+
+		totalProgressBG.width = game.s2d.width;
+		totalProgressBar.width = Math.round((damageDone / totalHealth) * game.s2d.width);
 
 		bulletInfo.bullets = horse.ammo;
 		bulletInfo.y = timeText.y;

@@ -13,11 +13,11 @@
 ## HTML/Js Specific values
 # Twitter card
 -D twitterSite=https://yourwebsite.com
--D twitterCreator=@yourusername
+-D twitterCreator=@jefvel
 # OpenGraph
--D ogUrl=https://yourwebsite.com
--D ogDescription=Your game Description
--D ogImage=https://link.to.your.img/photo.png
+-D ogUrl=https://jefvel.newgrounds.com
+-D ogDescription=Make a name for yourself in the god killing business
+-D ogImage=https://i.imgur.com/uMT8RYc.png
 
 
 ## Etc

@@ -147,6 +147,12 @@ class God extends Entity2D {
 
 		hands = [];
 		skeletons = [];
+
+		var s = PlayState.instance;
+		s.totalHealth += eyePositions.length * Eye.MAX_HEALTH;
+		s.totalHealth += 4 * HandEnemy.MAX_HEALTH;
+		s.totalHealth += skeletonCount * Skeleton.MAX_HEALTH;
+		s.totalHealth += GodEye.MAX_HEALTH;
 	}
 
 	public var originX = 0.;
@@ -493,8 +499,8 @@ class God extends Entity2D {
 			}
 		});
 	}
-	public var paused = false;
 
+	public var paused = false;
 
 	function initLastPhase() {
 		phase = CenterEye;

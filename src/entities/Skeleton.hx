@@ -1,11 +1,13 @@
 package entities;
 
+import gamestates.PlayState;
 import elke.Game;
 import elke.graphics.Sprite;
 
 class Skeleton extends Enemy {
 	public var sprite : Sprite;
-	public var health = 30.0;
+	public static final MAX_HEALTH = 30.;
+	public var health = MAX_HEALTH;
 
 	var bar : HpBar;
 
@@ -29,7 +31,11 @@ class Skeleton extends Enemy {
 			return;
 		}
 
-		health -= amount;
+		var am = Math.min(amount, health);
+		PlayState.instance.doDamage(am);
+
+		health -= am;
+
 		if (health <= 0) {
 			dead = true;
 			vx = Math.random() * 10 - 5;

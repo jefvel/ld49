@@ -1,11 +1,13 @@
 package entities;
 
+import gamestates.PlayState;
 import elke.Game;
 import elke.graphics.Sprite;
 
 class Eye extends Enemy {
 	var sprite : Sprite;
-	public var health = 15.0;
+	public static final MAX_HEALTH = 15.;
+	public var health = MAX_HEALTH;
 	var bar : HpBar;
 
 	public function new(?p) {
@@ -29,7 +31,10 @@ class Eye extends Enemy {
 			return;
 		}
 
-		health -= amount;
+		var am = Math.min(amount, health);
+		PlayState.instance.doDamage(am);
+
+		health -= am;
 		if (health <= 0) {
 			dead = true;
 			vx = Math.random() * 10 - 5;
